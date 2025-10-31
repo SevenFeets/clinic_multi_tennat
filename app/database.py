@@ -7,10 +7,6 @@ Database connection and session management
 3. Create a Base class (parent for all models)
 4. Create a dependency function to get database sessions
 
-📚 LEARNING RESOURCES:
-- SQLAlchemy Tutorial: https://docs.sqlalchemy.org/en/20/tutorial/
-- Database Sessions Explained: https://docs.sqlalchemy.org/en/20/orm/session_basics.html
-
 💡 KEY CONCEPTS:
 - Engine: The starting point for database connection
 - Session: A "workspace" for database operations
@@ -23,8 +19,13 @@ Database connection and session management
 # HINT: from sqlalchemy.ext.declarative import declarative_base
 # HINT: from sqlalchemy.orm import sessionmaker, Session
 
-# TODO: Import your configuration
-# HINT: from app.config import settings
+from sqlalchemy import create_engine, URL, text
+from sqlalchemy.ext.declarative import declarative_basefrpm 
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+from app.config import settings
+
 
 
 # TODO: Create database engine

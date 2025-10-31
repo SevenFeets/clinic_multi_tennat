@@ -52,22 +52,32 @@ async def health_check():
 async def main():
     return {"message": "Welcome to the Clinic Management API"}
 
-# 🎯 CHALLENGE (Optional): 
-# Add an endpoint that returns the current date and time
-# HINT: from datetime import datetime
+
 from datetime import datetime
 @app.get("/datetime")
 async def get_datetime():
-    return {"datetime": datetime.now()}
+    return {"datetime": str(datetime.now())}
+
+
+@app.get("/about")
+async def about():
+    return {"message": "This is the about page"}
+
+@app.get("/contact")
+async def contact():
+    return {"message": "This is the contact page"}
+
+@app.get("/services")
+async def services():
+    return {"message": "This is the services page"}
+
+@app.get("/products")
+async def products():
+    return {"message": "This is the products page"}
 
 # 🧪 TESTING YOUR WORK:
 # 1. Run: uvicorn app.main:app --reload
 # 2. Visit: http://localhost:8000/docs
 # 3. Try out your endpoints in the interactive documentation!
 # 4. You should see your endpoints listed and be able to test them
-
-# ⚠️ COMMON ERRORS:
-# - "ModuleNotFoundError": Did you activate your virtual environment?
-# - "Port already in use": Try a different port with --port 8001
-# - Indentation errors: Python is picky about spaces vs tabs!
 

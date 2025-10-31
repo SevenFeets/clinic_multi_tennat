@@ -1,49 +1,65 @@
 """
-Configuration settings for the application
-
-🎯 YOUR MISSION (Week 1):
-Load environment variables from .env file and make them available to your app
 
 📚 LEARNING RESOURCES:
 - Pydantic Settings: https://docs.pydantic.dev/latest/usage/pydantic_settings/
 - Environment Variables: https://www.youtube.com/watch?v=IolxqkL7cD8
 
-💡 HINTS:
-- Use pydantic_settings to load environment variables
-- This is safer than using os.getenv() directly
-- BaseSettings automatically loads from .env file
 """
 
-# TODO: Import necessary modules
-# HINT: from pydantic_settings import BaseSettings
-# HINT: from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
 
 
-# TODO: Create a Settings class that inherits from BaseSettings
-# HINT: class Settings(BaseSettings):
+class Settings(BaseSettings):
+    database_url: str = Field(..., env="DATABASE_URL")
+    secret_key: str = Field(..., env='SECRET_KEY')
+    algorithm: str = Field(default="HS256", env="ALGORITHM")
+    access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    app_name: str = Field(default="Clinic Management SaaS", env="APP_NAME")
+    debug: bool = Field(default=True, env="DEBUG")
 
-    # TODO: Define configuration variables
-    # HINT: database_url: str = Field(..., env="DATABASE_URL")
-    # HINT: secret_key: str = Field(..., env="SECRET_KEY")
-    # HINT: algorithm: str = Field(default="HS256", env="ALGORITHM")
-    # HINT: access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    @field_validator('database_url')
+    def validate_database_url(cls, v):
+        if not v.startswith("postgresql://") and not v.startswith("sqlite://"):
+            raise ValueError("DATABASE_URL must start with postgresql:// or sqlite://")
+        return v
+
     
-    # TODO: Add a nested Config class
-    # HINT: class Config:
-    # HINT:     env_file = ".env"
-    # HINT:     case_sensitive = False
+    @field_validator('secret_key')
+    def validate_secret_key(cls, v):
+        if len(v) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 characters long")
+        return v
 
 
-# TODO: Create a settings instance
-# HINT: settings = Settings()
+    @field_validator('access_token_expire_minutes')
+    def validate_access_token_expire_minutes(cls, v):
+        if v < 1 or v > 1440:
+            raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be between 1 and 1440 minutes")
+        return v
 
 
-# 🎯 CHALLENGE:
-# Add validation to ensure DATABASE_URL starts with "postgresql://"
-# HINT: Use Pydantic's @validator decorator
+    @field_validator('algorithm')
+    def validate_algorithm(cls, v):
+        if v not in ["HS256", "RS256"]:
+            raise ValueError("ALGORITHM must be either HS256 or RS256")
+        return v
 
-# 🧪 TESTING:
-# In Python console: 
-# >>> from app.config import settings
-# >>> print(settings.database_url)
+
+    @field_validator('app_name')
+    def validate_app_name(cls, v):
+        if len(v) < 1:
+            raise ValueError("APP_NAME must be at least 1 character long")
+        return v
+
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+
+# Create settings instance
+settings = Settings()
+
+
 
