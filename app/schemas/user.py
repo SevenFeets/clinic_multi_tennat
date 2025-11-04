@@ -1,63 +1,118 @@
 """
 User Schemas - Pydantic models for validation
 
-🎯 YOUR MISSION (Week 2):
+YOUR MISSION (Week 2):
 Create Pydantic schemas to validate user data
 
-📚 LEARNING RESOURCES:
-- Pydantic Tutorial: https://docs.pydantic.dev/latest/
-- Data Validation: https://fastapi.tiangolo.com/tutorial/body/
-
-💡 KEY CONCEPTS:
+ KEY CONCEPTS:
 - SQLAlchemy Models = Database tables
 - Pydantic Schemas = Data validation and serialization
 - Schemas protect your API from bad data!
 """
 
-# TODO: Import Pydantic components
-# HINT: from pydantic import BaseModel, EmailStr, Field
-# HINT: from datetime import datetime
-# HINT: from typing import Optional
+# Import Pydantic components
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from datetime import datetime
+from typing import Optional
 
 
-# TODO: Create UserBase schema (shared fields)
-# HINT: class UserBase(BaseModel):
-# HINT:     email: EmailStr  # Validates email format!
-# HINT:     full_name: Optional[str] = None
+# UserBase: Shared fields used by multiple schemas
+class UserBase(BaseModel):
+    """
+    Base schema with fields shared across user operations.
+    This gets inherited by UserCreate and User schemas.
+    """
+    email: EmailStr  # Automatically validates email format! (needs email-validator package)
+    full_name: Optional[str] = None  # Optional means it can be None (not required)
 
 
-# TODO: Create UserCreate schema (for registration)
-# HINT: class UserCreate(UserBase):
-# HINT:     password: str = Field(..., min_length=8)
-# NOTE: This is what clients send when creating a user
+# UserCreate: What clients send when registering
+class UserCreate(UserBase):
+    """
+    Schema for user registration.
+    Inherits email and full_name from UserBase.
+    Adds password field with validation.
+    
+    Example:
+    {
+        "email": "john@example.com",
+        "full_name": "John Doe",
+        "password": "SecurePass123"
+    }
+    """
+    password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
+    
+    # 🔒 SECURITY NOTE: This schema is ONLY for input. 
+    # We NEVER return this from our API (would expose passwords!)
 
 
-# TODO: Create UserLogin schema (for login)
-# HINT: class UserLogin(BaseModel):
-# HINT:     email: EmailStr
-# HINT:     password: str
+# UserLogin: What clients send when logging in
+class UserLogin(BaseModel):
+    """
+    Schema for user authentication.
+    Simple: just email and password.
+    
+    Example:
+    {
+        "email": "john@example.com",
+        "password": "SecurePass123"
+    }
+    """
+    email: EmailStr
+    password: str  # No min_length here - we're checking if it exists, not creating new
 
 
-# TODO: Create User schema (response model)
-# HINT: class User(UserBase):
-# HINT:     id: int
-# HINT:     is_active: bool
-# HINT:     created_at: datetime
-# HINT:     tenant_id: Optional[int] = None
-# HINT:     
-# HINT:     class Config:
-# HINT:         from_attributes = True  # Allows reading from SQLAlchemy models
+# User: What we return to clients (response model)
+class User(UserBase):
+    """
+    Schema for returning user data.
+    Inherits email and full_name from UserBase.
+    Adds database fields like id, created_at.
+    
+    🔒 CRITICAL: NO PASSWORD FIELD! Never return passwords!
+    
+    Example Response:
+    {
+        "id": 1,
+        "email": "john@example.com",
+        "full_name": "John Doe",
+        "is_active": true,
+        "created_at": "2025-11-04T10:30:00",
+        "tenant_id": null
+    }
+    """
+    id: int
+    is_active: bool
+    created_at: datetime
+    is_superuser: bool = False
+    # tenant_id: Optional[int] = None  # Commented out until we create Tenant model
+    
+    # Pydantic V2 config - allows reading from SQLAlchemy models
+    model_config = ConfigDict(from_attributes=True)
 
 
-# TODO: Create Token schema (for JWT responses)
-# HINT: class Token(BaseModel):
-# HINT:     access_token: str
-# HINT:     token_type: str = "bearer"
+# Token: What we return after successful login
+class Token(BaseModel):
+    """
+    JWT token response after successful authentication.
+    
+    Example Response after login:
+    {
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "token_type": "bearer"
+    }
+    """
+    access_token: str  # The actual JWT token
+    token_type: str = "bearer"  # Standard OAuth2 token type
 
 
-# TODO: Create TokenData schema (decoded token)
-# HINT: class TokenData(BaseModel):
-# HINT:     email: Optional[str] = None
+# TokenData: What's inside the token (decoded)
+class TokenData(BaseModel):
+    """
+    Data extracted from a decoded JWT token.
+    Used internally to identify the user from their token.
+    """
+    email: Optional[str] = None  # User's email from token payload
 
 
 # 📖 UNDERSTANDING SCHEMAS:
