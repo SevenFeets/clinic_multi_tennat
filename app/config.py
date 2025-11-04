@@ -11,12 +11,17 @@ from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
-    database_url: str = Field(..., env="DATABASE_URL")
-    secret_key: str = Field(..., env='SECRET_KEY')
-    algorithm: str = Field(default="HS256", env="ALGORITHM")
-    access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
-    app_name: str = Field(default="Clinic Management SaaS", env="APP_NAME")
-    debug: bool = Field(default=True, env="DEBUG")
+    database_url: str
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    app_name: str = "Clinic Management SaaS"
+    debug: bool = True
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False
+    )
 
     @field_validator('database_url')
     def validate_database_url(cls, v):
@@ -51,11 +56,6 @@ class Settings(BaseSettings):
         if len(v) < 1:
             raise ValueError("APP_NAME must be at least 1 character long")
         return v
-
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 
 # Create settings instance

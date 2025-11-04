@@ -1,56 +1,50 @@
 """
-User Model - Database table for users
-
-🎯 YOUR MISSION (Week 2):
-Create a User model with proper fields and relationships
-
-📚 LEARNING RESOURCES:
-- SQLAlchemy Models: https://docs.sqlalchemy.org/en/20/orm/mapping_styles.html
-- Column Types: https://docs.sqlalchemy.org/en/20/core/types.html
-
-💡 KEY CONCEPTS:
 - Each class = one database table
 - Each attribute = one database column
 - SQLAlchemy handles the SQL for you!
 """
-
-# TODO: Import SQLAlchemy components
-# HINT: from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-# HINT: from sqlalchemy.orm import relationship
-# HINT: from datetime import datetime
-
-# TODO: Import Base from database.py
-# HINT: from app.database import Base
+# Import SQLAlchemy components
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from datetime import timezone
+from app.database import Base
 
 
-# TODO: Create User class that inherits from Base
-# HINT: class User(Base):
+#Create User class that inherits from Base
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    full_name = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    is_active = Column(Boolean, default=False)
+    is_superuser = Column(Boolean, default=False)
+    # tenant_id = Column(Integer, ForeignKey("tenants.id")) # For multi-tenancy!
 
-    # TODO: Set table name
-    # HINT: __tablename__ = "users"
+    #  Define relationships (Week 3)
+    # tenant = relationship("Tenant", back_populates="users")  # Commented out until Tenant model is created
+    last_logins = relationship("LastLogin", back_populates="user")
+   
+
+
+class LastLogin(Base):
+    """Table to track user login history"""
+    __tablename__ = "last_logins"
     
-    # TODO: Define columns
-    # HINT: id = Column(Integer, primary_key=True, index=True)
-    # HINT: email = Column(String, unique=True, index=True, nullable=False)
-    # HINT: hashed_password = Column(String, nullable=False)
-    # HINT: full_name = Column(String)
-    # HINT: is_active = Column(Boolean, default=True)
-    # HINT: is_superuser = Column(Boolean, default=False)
-    # HINT: created_at = Column(DateTime, default=datetime.utcnow)
-    # HINT: tenant_id = Column(Integer, ForeignKey("tenants.id"))  # For multi-tenancy!
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    login_time = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+    ip_address = Column(String, nullable=True)  # Optional: track where they logged in from
     
-    # TODO: Define relationships (Week 3)
-    # HINT: tenant = relationship("Tenant", back_populates="users")
+    # Relationship back to User
+    user = relationship("User", back_populates="last_logins")
 
 
-# 📖 UNDERSTANDING THE CODE:
-# 
-# Column Types:
-# - Integer: Whole numbers (1, 2, 3...)
-# - String: Text (email, name, etc.)
-# - Boolean: True/False
-# - DateTime: Date and time stamps
-#
+
+
+
 # Column Arguments:
 # - primary_key=True: Unique identifier for each row
 # - unique=True: No two rows can have the same value

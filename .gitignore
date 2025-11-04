@@ -37,3 +37,10 @@ alembic/versions/*.pyc
 
 app/secretKey.py
 app/env.py
+create_tables.py
+alembic.ini
+pytest.ini
+.cursor/
+
+# documentation
+SETUP_COMPLETE.md

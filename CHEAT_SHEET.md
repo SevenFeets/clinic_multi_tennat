@@ -565,3 +565,18 @@ from fastapi import status
 
 **Remember**: Everyone gets stuck. It's part of learning! 🚀
 
+--- 
+
+# adding source to path example
+
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Users\lnrmy\AppData\Roaming\Python\Python311\Scripts", 
+[EnvironmentVariableTarget]::User)
+
+# and check 
+
+$env:PATH -split ';' | Select-String "AppData\\Roaming\\Python"
+
+---
+
+# Alembic: 
+python -m alembic init alembic

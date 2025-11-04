@@ -15,8 +15,7 @@ Database connection and session management
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.config import settings
 
@@ -61,18 +60,3 @@ def get_db():
         db.close()  # Always close the session
 
 
-# 🧪 TESTING:
-# Create a file test_db_connection.py in project root:
-#
-# from app.database import SessionLocal
-# from sqlalchemy import text
-#
-# print("Testing database connection...")
-# try:
-#     db = SessionLocal()
-#     result = db.execute(text("SELECT current_database()"))
-#     db_name = result.scalar()
-#     print(f"✅ Connected to database: {db_name}")
-#     db.close()
-# except Exception as e:
-#     print(f"❌ Connection failed: {e}")
