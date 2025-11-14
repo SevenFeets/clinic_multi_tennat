@@ -148,10 +148,10 @@ def verify_token(token: str) -> Optional[TokenData]:
         
         # Extract email from token
         # "sub" is standard JWT claim for "subject" (the user identifier)
-        email: str = payload.get("sub")
+        email: Optional[str] = payload.get("sub")
         
         # If no email in token, it's invalid
-        if email is None:
+        if email is None: 
             return None
         
         # Return TokenData with the email
