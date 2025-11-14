@@ -1,56 +1,41 @@
 """
-Authentication Endpoints - Registration and Login
-
-🎯 YOUR MISSION (Week 2):
 Create endpoints for user registration and login
-
-📚 LEARNING RESOURCES:
-- FastAPI Request Body: https://fastapi.tiangolo.com/tutorial/body/
-- HTTP Status Codes: https://httpstatuses.com/
-- OAuth2 Flow: https://fastapi.tiangolo.com/tutorial/security/simple-oauth2/
-
-💡 KEY CONCEPTS:
-- POST /auth/register → Create new user
-- POST /auth/login → Get JWT token
-- Status codes matter (201 for creation, 200 for success, 401 for unauthorized)
 """
 
-# TODO: Import FastAPI components
-# HINT: from fastapi import APIRouter, Depends, HTTPException, status
-# HINT: from fastapi.security import OAuth2PasswordRequestForm
-# HINT: from sqlalchemy.orm import Session
+# Import FastAPI components
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
-# TODO: Import your modules
-# HINT: from app.database import get_db
-# HINT: from app.models.user import User
-# HINT: from app.schemas.user import UserCreate, User as UserSchema, Token
-# HINT: from app.auth.auth import get_password_hash, verify_password, create_access_token
+# Import your modules
+from app.database import get_db
+from app.models import user
+from app.schemas import user as user_schema
+from app.utils.security import hash_password, verify_password, create_access_token
 
+#Create router
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-# TODO: Create router
-# HINT: router = APIRouter(prefix="/auth", tags=["Authentication"])
+# Registration endpoint
+@router.post("/register", response_model=user_schema.User, status_code=status.HTTP_201_CREATED)
+async def register(user_data: user_schema.UserCreate, db: Session = Depends(get_db)):
+    # Check if user already exists
+    existing_user = db.query(user.User).filter(user.User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+            )
 
+    #create new user
+    hashed_password = hash_password(user_data.password)
+    new_user = user.User(
+        email=user_data.email,
+        full_name=user_data.full_name,
+        hashed_password=hashed_password
+    )
 
-# TODO: Registration endpoint
-# HINT: @router.post("/register", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
-# HINT: async def register(user_data: UserCreate, db: Session = Depends(get_db)):
-# HINT:     
-# HINT:     # Check if user already exists
-# HINT:     existing_user = db.query(User).filter(User.email == user_data.email).first()
-# HINT:     if existing_user:
-# HINT:         raise HTTPException(
-# HINT:             status_code=status.HTTP_400_BAD_REQUEST,
-# HINT:             detail="Email already registered"
-# HINT:         )
-# HINT:     
-# HINT:     # Create new user
-# HINT:     hashed_password = get_password_hash(user_data.password)
-# HINT:     new_user = User(
-# HINT:         email=user_data.email,
-# HINT:         hashed_password=hashed_password,
-# HINT:         full_name=user_data.full_name
-# HINT:     )
-# HINT:     
+    
 # HINT:     # Save to database
 # HINT:     db.add(new_user)
 # HINT:     db.commit()

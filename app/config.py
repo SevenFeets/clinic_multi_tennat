@@ -1,10 +1,3 @@
-"""
-
-📚 LEARNING RESOURCES:
-- Pydantic Settings: https://docs.pydantic.dev/latest/usage/pydantic_settings/
-- Environment Variables: https://www.youtube.com/watch?v=IolxqkL7cD8
-
-"""
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator

@@ -23,7 +23,7 @@ class UserBase(BaseModel):
     This gets inherited by UserCreate and User schemas.
     """
     email: EmailStr  # Automatically validates email format! (needs email-validator package)
-    full_name: Optional[str] = None  # Optional means it can be None (not required)
+    full_name: str  # Required field - must match database constraint (nullable=False)
 
 
 # UserCreate: What clients send when registering

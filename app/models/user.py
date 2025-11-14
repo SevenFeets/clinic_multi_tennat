@@ -4,7 +4,7 @@
 - SQLAlchemy handles the SQL for you!
 """
 # Import SQLAlchemy components
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from datetime import timezone
@@ -17,8 +17,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     full_name = Column(String, nullable=False)
-    password = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    hashed_password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now())
     is_active = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)
     # tenant_id = Column(Integer, ForeignKey("tenants.id")) # For multi-tenancy!
@@ -35,7 +35,7 @@ class LastLogin(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    login_time = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+    login_time = Column(DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
     ip_address = Column(String, nullable=True)  # Optional: track where they logged in from
     
     # Relationship back to User
