@@ -3,6 +3,7 @@ Create endpoints for user registration and login
 """
 
 # Import FastAPI components
+import http
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -12,6 +13,7 @@ from app.database import get_db
 from app.models import user
 from app.schemas import user as user_schema
 from app.utils.security import hash_password, verify_password, create_access_token
+from app.auth.dependencies import get_current_active_user
 
 #Create router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -35,47 +37,52 @@ async def register(user_data: user_schema.UserCreate, db: Session = Depends(get_
         hashed_password=hashed_password
     )
 
-    
-# HINT:     # Save to database
-# HINT:     db.add(new_user)
-# HINT:     db.commit()
-# HINT:     db.refresh(new_user)  # Get the id and other defaults
-# HINT:     
-# HINT:     return new_user
+    # Save to database
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
 
 
-# TODO: Login endpoint
-# HINT: @router.post("/login", response_model=Token)
-# HINT: async def login(
-# HINT:     form_data: OAuth2PasswordRequestForm = Depends(),
-# HINT:     db: Session = Depends(get_db)
-# HINT: ):
-# HINT:     
-# HINT:     # Find user by email
-# HINT:     user = db.query(User).filter(User.email == form_data.username).first()
-# HINT:     
-# HINT:     # Check if user exists and password is correct
-# HINT:     if not user or not verify_password(form_data.password, user.hashed_password):
-# HINT:         raise HTTPException(
-# HINT:             status_code=status.HTTP_401_UNAUTHORIZED,
-# HINT:             detail="Incorrect email or password",
-# HINT:             headers={"WWW-Authenticate": "Bearer"},
-# HINT:         )
-# HINT:     
-# HINT:     # Check if user is active
-# HINT:     if not user.is_active:
-# HINT:         raise HTTPException(
-# HINT:             status_code=status.HTTP_400_BAD_REQUEST,
-# HINT:             detail="Inactive user"
-# HINT:         )
-# HINT:     
-# HINT:     # Create access token
-# HINT:     access_token = create_access_token(data={"sub": user.email})
-# HINT:     
-# HINT:     return {"access_token": access_token, "token_type": "bearer"}
+# Login endpoint
+@router.post("/login", response_model=user_schema.Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    #find user by email
+    db_existing_user = db.query(user.User).filter(user.User.email == form_data.username).first()
+    if not db_existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            header={"WWW-Authenticate": "Bearer"}
+        )
+
+    #verify password
+    if not verify_password(form_data.password, db_existing_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            header={"WWW-Authenticate": "Bearer"}
+        )
+
+    # check if user is active
+    if not db_existing_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user",
+            header={"WWW-Authenticate": "Bearer"}
+        )
+
+    # create access token
+    access_token = create_access_token(data={"sub": db_existing_user.email})
+    return {"access_token": access_token, "token_type": "bearer", "user": db_existing_user}
 
 
-# TODO: Get current user endpoint (test authentication)
+#  Get current user endpoint (test authentication)
+# @router.get("/me", response_model=user_schema.User)
+# async def get_me(current_user: user.User = Depends(get_current_active_user)):
+# return current_user
+
 # HINT: @router.get("/me", response_model=UserSchema)
 # HINT: async def get_me(current_user: User = Depends(get_current_active_user)):
 # HINT:     return current_user
