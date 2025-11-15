@@ -1,73 +1,88 @@
 """
 Authentication Dependencies - Protect routes and get current user
-
-🎯 YOUR MISSION (Week 2):
-Create dependencies to protect API endpoints
-
-📚 LEARNING RESOURCES:
-- FastAPI Dependencies: https://fastapi.tiangolo.com/tutorial/dependencies/
-- OAuth2 Password Bearer: https://fastapi.tiangolo.com/tutorial/security/first-steps/
-
-💡 KEY CONCEPTS:
 - Dependencies = Functions that run before your endpoint
 - Use them to verify authentication
 - FastAPI passes the result to your endpoint
 - Reusable across all protected routes
 """
 
-# TODO: Import necessary modules
-# HINT: from fastapi import Depends, HTTPException, status
-# HINT: from fastapi.security import OAuth2PasswordBearer
-# HINT: from sqlalchemy.orm import Session
-# HINT: from app.database import get_db
-# HINT: from app.auth.auth import verify_token
-# HINT: from app.models.user import User
-# HINT: from app.schemas.user import TokenData
+# Import necessary modules
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import Session
+from app.database import get_db
+from app.utils.security import verify_token
+from app.models.user import User 
 
 
-# TODO: Create OAuth2 scheme
-# HINT: oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-# NOTE: This tells FastAPI where the login endpoint is
+# Create OAuth2 scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login") # login endpoint
 
+# Dependency to get current user from token
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> User:
 
-# TODO: Dependency to get current user from token
-# HINT: async def get_current_user(
-# HINT:     token: str = Depends(oauth2_scheme),
-# HINT:     db: Session = Depends(get_db)
-# HINT: ) -> User:
-# HINT:     
-# HINT:     # Create exception for authentication failures
-# HINT:     credentials_exception = HTTPException(
-# HINT:         status_code=status.HTTP_401_UNAUTHORIZED,
-# HINT:         detail="Could not validate credentials",
-# HINT:         headers={"WWW-Authenticate": "Bearer"},
-# HINT:     )
-# HINT:     
-# HINT:     # Verify token
-# HINT:     payload = verify_token(token)
-# HINT:     if payload is None:
-# HINT:         raise credentials_exception
-# HINT:     
-# HINT:     # Get email from token
-# HINT:     email: str = payload.get("sub")
-# HINT:     if email is None:
-# HINT:         raise credentials_exception
-# HINT:     
-# HINT:     # Get user from database
-# HINT:     user = db.query(User).filter(User.email == email).first()
-# HINT:     if user is None:
-# HINT:         raise credentials_exception
-# HINT:     
-# HINT:     return user
+    # Create exception for authentication failures 
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
 
+    #verify token
+    payload = verify_token(token)
+    if payload is None:
+        raise credentials_exception
 
-# TODO: Dependency to get active user only
-# HINT: async def get_current_active_user(
-# HINT:     current_user: User = Depends(get_current_user)
-# HINT: ) -> User:
-# HINT:     if not current_user.is_active:
-# HINT:         raise HTTPException(status_code=400, detail="Inactive user")
-# HINT:     return current_user
+    # get email from token
+    email: str = payload.email
+    if email is None:
+        raise credentials_exception
+
+    # get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+
+    return user
+
+# Dependency to get active user only
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user",
+            header={"WWW-Authenticate": "Bearer"}
+        )
+
+    return current_user
+
+#  get_current_superuser (only admins)
+async def get_current_superuser(
+    current_user: User = Depends(get_current_user)
+) -> User:
+
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user does not have enough privileges",
+            header={"WWW-Authenticate": "Bearer"}
+        )
+
+    return current_user
+
+#  require_tenant (ensure user belongs to tenant)
+
+# TODO
+
+#  rate_limiting (prevent abuse)
+
+# TODO
+
 
 
 # 📖 UNDERSTANDING DEPENDENCIES:

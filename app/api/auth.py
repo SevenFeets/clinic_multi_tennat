@@ -78,15 +78,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return {"access_token": access_token, "token_type": "bearer", "user": db_existing_user}
 
 
-#  Get current user endpoint (test authentication)
-# @router.get("/me", response_model=user_schema.User)
-# async def get_me(current_user: user.User = Depends(get_current_active_user)):
-# return current_user
-
-# HINT: @router.get("/me", response_model=UserSchema)
-# HINT: async def get_me(current_user: User = Depends(get_current_active_user)):
-# HINT:     return current_user
-# NOTE: Don't forget to import get_current_active_user from dependencies!
+# Get current user endpoint (test authentication)
+@router.get("/me", response_model=user_schema.User)
+async def get_me(current_user: user.User = Depends(get_current_active_user)) -> user.User:
+    return current_user
 
 
 # 📖 UNDERSTANDING THE FLOW:
