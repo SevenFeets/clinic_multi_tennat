@@ -11,10 +11,9 @@ Create Pydantic schemas to validate user data
 """
 
 # Import Pydantic components
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
 from datetime import datetime
 from typing import Optional
-
 
 # UserBase: Shared fields used by multiple schemas
 class UserBase(BaseModel):
@@ -114,6 +113,19 @@ class TokenData(BaseModel):
     """
     email: Optional[str] = None  # User's email from token payload
 
+# Password strength validation
+@field_validator("password")
+def validate_password(cls, v) -> str:
+    if len(v) < 8:
+        raise ValueError("Password must be at least 8 characters")
+    elif not any(char.isdigit() for char in v):
+        raise ValueError("Password must contain at least one number")
+    elif not any(char.isupper() for char in v):
+        raise ValueError("Password must contain at least one uppercase letter")
+    elif not any(char.islower() for char in v):
+        raise ValueError("Password must contain at least one lowercase letter")
+    return v
+
 
 # 📖 UNDERSTANDING SCHEMAS:
 # 
@@ -139,7 +151,7 @@ class TokenData(BaseModel):
 # Add password strength validation:
 # - At least one uppercase letter
 # - At least one number
-# HINT: Use @validator decorator from Pydantic
+# HINT: Use @field_validator v2 decorator from Pydantic
 
 # 🧪 TESTING:
 # from app.schemas.user import UserCreate

@@ -21,10 +21,10 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now())
     is_active = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)
-    # tenant_id = Column(Integer, ForeignKey("tenants.id")) # For multi-tenancy!
+    tenant_id = Column(Integer, ForeignKey("tenants.id")) # For multi-tenancy!
 
-    #  Define relationships (Week 3)
-    # tenant = relationship("Tenant", back_populates="users")  # Commented out until Tenant model is created
+    #  Define relationships
+    tenant = relationship("Tenant", back_populates="users")  # Commented out until Tenant model is created
     last_logins = relationship("LastLogin", back_populates="user")
    
 
