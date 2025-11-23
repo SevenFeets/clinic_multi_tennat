@@ -19,16 +19,17 @@ class Tenant(Base):
     __tablename__ = "tenants"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column[str](String, nullable=False)
-    subdomain = Column[str](String, unique=True, nullable=False)
-    is_active = Column[bool](Boolean, default=True)
-    created_at = Column[datetime](DateTime, default=datetime.now(timezone.utc))
+    name = Column(String, nullable=False)
+    subdomain = Column(String, unique=True, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
    
     
     # Define relationships
     users = relationship("User", back_populates="tenant")
-    patients = relationship("Patient", back_populates="tenant")
-    appointments = relationship("Appointment", back_populates="tetant")
+    # TODO Week 4: Add these when you create Patient and Appointment models
+    # patients = relationship("Patient", back_populates="tenant")
+    # appointments = relationship("Appointment", back_populates="tenant")
     """
     add ons:
     - max_users

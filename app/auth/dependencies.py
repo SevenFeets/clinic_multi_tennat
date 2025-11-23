@@ -7,13 +7,14 @@ Authentication Dependencies - Protect routes and get current user
 """
 
 # Import necessary modules
-
-from fastapi import Depends, HTTPException, status
+from typing import Optional
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import Session
+from sqlalchemy.orm import Session
 from app.database import get_db
 from app.utils.security import verify_token
-from app.models.user import User 
+from app.models.user import User
+from app.models.tenant import Tenant 
 
 
 # Create OAuth2 scheme
@@ -32,17 +33,18 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"}
     )
 
-    #verify token
+    # Verify token and extract user data
+    # verify_token() returns TokenData with email, or None if invalid
+    # If None is returned, the token is invalid (expired, bad signature, or missing email)
     payload = verify_token(token)
     if payload is None:
         raise credentials_exception
+    
+    # At this point, payload.email is guaranteed to be not None
+    # (verify_token already checks this internally)
+    email: str = payload.email  # Type is str, not Optional[str]
 
-    # get email from token
-    email: str = payload.email
-    if email is None:
-        raise credentials_exception
-
-    # get user from database
+    # Get user from database
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
@@ -56,7 +58,7 @@ async def get_current_active_user(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user",
-            header={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
     return current_user
@@ -70,18 +72,76 @@ async def get_current_superuser(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user does not have enough privileges",
-            header={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
     return current_user
 
-#  require_tenant (ensure user belongs to tenant)
+# Dependency to get tenant from request (set by middleware)
+async def get_tenant(request: Request) -> Tenant:
+    """
+    Get the current tenant from request.state.
+    The tenant is set by TenantMiddleware.
+    
+    Usage:
+        @app.get("/endpoint")
+        async def my_endpoint(tenant: Tenant = Depends(get_tenant)):
+            return {"tenant": tenant.name}
+    """
+    if not hasattr(request.state, "tenant"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context not found. Please provide X-Tenant-ID header."
+        )
+    
+    return request.state.tenant
 
-# TODO
+
+# Dependency to verify user belongs to current tenant
+async def require_tenant(
+    request: Request,
+    current_user: User = Depends(get_current_active_user)
+) -> User:
+    """
+    Verify that the current user belongs to the tenant in the request context.
+    Returns the user if they belong to the tenant, raises exception otherwise.
+    
+    Usage:
+        @app.get("/protected-endpoint")
+        async def my_endpoint(user: User = Depends(require_tenant)):
+            # user is guaranteed to belong to the tenant in the request
+            return {"message": f"Hello {user.full_name}"}
+    
+    Security:
+        - Prevents users from accessing other tenants' data
+        - Critical for multi-tenant data isolation
+    """
+    if not hasattr(request.state, "tenant"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context not found"
+        )
+    
+    tenant: Tenant = request.state.tenant
+    
+    # Check if user belongs to this tenant
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not assigned to any tenant. Please contact support."
+        )
+    
+    if current_user.tenant_id != tenant.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied. User does not belong to tenant '{tenant.name}'"
+        )
+    
+    return current_user
+
 
 #  rate_limiting (prevent abuse)
-
-# TODO
+# TODO: Implement rate limiting in Month 4 (Production Hardening)
 
 
 

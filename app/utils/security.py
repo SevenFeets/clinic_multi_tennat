@@ -113,7 +113,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         # Use default from settings (30 minutes)
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     
-    to_encode.update({"exp": expire})
+    # Convert datetime to Unix timestamp (required by JWT standard)
+    to_encode.update({"exp": int(expire.timestamp())})
     
     # Create the JWT token
     # - to_encode: the data to put in the token
@@ -150,11 +151,12 @@ def verify_token(token: str) -> Optional[TokenData]:
         # "sub" is standard JWT claim for "subject" (the user identifier)
         email: Optional[str] = payload.get("sub")
         
-        # If no email in token, it's invalid
+        # If no email in token, it's invalid - return None instead of TokenData with None email
         if email is None: 
             return None
         
-        # Return TokenData with the email
+        # At this point, email is guaranteed to be str (not None)
+        # Return TokenData with the email (TokenData.email is required, not Optional)
         return TokenData(email=email)
         
     except JWTError:

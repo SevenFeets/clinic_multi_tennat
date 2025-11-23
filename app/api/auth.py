@@ -3,7 +3,6 @@ Create endpoints for user registration and login
 """
 
 # Import FastAPI components
-import http
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -11,9 +10,10 @@ from sqlalchemy.orm import Session
 # Import your modules
 from app.database import get_db
 from app.models import user
+from app.models.tenant import Tenant
 from app.schemas import user as user_schema
 from app.utils.security import hash_password, verify_password, create_access_token
-from app.auth.dependencies import get_current_active_user
+from app.auth.dependencies import get_current_active_user, require_tenant
 
 #Create router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -28,13 +28,36 @@ async def register(user_data: user_schema.UserCreate, db: Session = Depends(get_
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
             )
+    
+    # Validate that the tenant exists and is active
+    tenant = db.query(Tenant).filter(Tenant.id == user_data.tenant_id).first()
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tenant with ID {user_data.tenant_id} not found"
+        )
+    
+    if not tenant.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tenant '{tenant.name}' is not active. Registration is disabled."
+        )
 
     #create new user
     hashed_password = hash_password(user_data.password)
     new_user = user.User(
         email=user_data.email,
         full_name=user_data.full_name,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        # TEMPORARY FIX: Set is_active=True to allow immediate login
+        # ⚠️ SECURITY: In production, this should default to False and require email verification
+        # TODO: Implement proper email verification flow:
+        #   1. Generate verification token after registration
+        #   2. Send verification email with token link
+        #   3. Create /verify-email endpoint that sets is_active=True
+        #   4. Remove is_active=True from here
+        is_active=True,  # REMOVE THIS when email verification is implemented!
+        tenant_id=user_data.tenant_id  # Assign user to the specified tenant
     )
 
     # Save to database
@@ -54,7 +77,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
-            header={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
     #verify password
@@ -62,7 +85,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
-            header={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
     # check if user is active
@@ -70,7 +93,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user",
-            header={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
     # create access token
@@ -78,11 +101,42 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return {"access_token": access_token, "token_type": "bearer", "user": db_existing_user}
 
 
-# Get current user endpoint (test authentication)
+# Get current user endpoint (test authentication with tenant isolation)
 @router.get("/me", response_model=user_schema.User)
-async def get_me(current_user: user.User = Depends(get_current_active_user)) -> user.User:
+async def get_me(current_user: user.User = Depends(require_tenant)) -> user.User:
+    """
+    Get current user information.
+    
+    Requires:
+    - Valid JWT token in Authorization header
+    - X-Tenant-ID header matching the user's tenant
+    
+    Returns user info only if user belongs to the specified tenant.
+    This demonstrates multi-tenant data isolation!
+    """
     return current_user
 
+# @router.post("/verify-email", response_model=user_schema.User)
+# async def verify_email(email: str, db: Session = Depends(get_db)) -> user.User:
+#     # find user by email
+#     db_existing_user = db.query(user.User).filter(user.User.email == email).first()
+#     if not db_existing_user:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"User with email {email} not found"
+#         )
+#     return db_existing_user
+
+# @router.post("/resend-verification-email", response_model=user_schema.User)
+# async def resend_verification_email(email: str, db: Session = Depends(get_db)) -> user.User:
+#     # find user by email
+#     db_existing_user = db.query(user.User).filter(user.User.email == email).first()
+#     if not db_existing_user:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"User with email {email} not found"
+#         )
+#     return db_existing_user
 
 # 📖 UNDERSTANDING THE FLOW:
 # 

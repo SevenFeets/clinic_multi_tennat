@@ -19,7 +19,7 @@ class User(Base):
     full_name = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now())
-    is_active = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=False)  # ⚠️ Default is False, but registration sets True temporarily (see TODO in auth.py)
     is_superuser = Column(Boolean, default=False)
     tenant_id = Column(Integer, ForeignKey("tenants.id")) # For multi-tenancy!
 

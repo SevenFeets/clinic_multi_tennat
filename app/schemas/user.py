@@ -36,10 +36,31 @@ class UserCreate(UserBase):
     {
         "email": "john@example.com",
         "full_name": "John Doe",
-        "password": "SecurePass123"
+        "password": "SecurePass123",
+        "tenant_id": 1
     }
     """
     password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
+    tenant_id: int = Field(..., description="ID of the tenant/clinic this user belongs to")
+    
+    # Password strength validation
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """
+        Validate password strength requirements:
+        - At least 8 characters (enforced by Field min_length)
+        - At least one number
+        - At least one uppercase letter
+        - At least one lowercase letter
+        """
+        if not any(char.isdigit() for char in v):
+            raise ValueError("Password must contain at least one number")
+        if not any(char.isupper() for char in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(char.islower() for char in v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        return v
     
     # 🔒 SECURITY NOTE: This schema is ONLY for input. 
     # We NEVER return this from our API (would expose passwords!)
@@ -59,7 +80,7 @@ class UserLogin(BaseModel):
     """
     email: EmailStr
     password: str  # No min_length here - we're checking if it exists, not creating new
-
+    model_config = ConfigDict(from_attributes=True)
 
 # User: What we return to clients (response model)
 class User(UserBase):
@@ -98,11 +119,20 @@ class Token(BaseModel):
     Example Response after login:
     {
         "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user": { ... }  # Optional user object
     }
     """
     access_token: str  # The actual JWT token
     token_type: str = "bearer"  # Standard OAuth2 token type
+    user: Optional['User'] = None  # Include user info in login response
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Rebuild Token model to resolve forward references
+# This is required in Pydantic v2 when using forward references like Optional['User']
+Token.model_rebuild()
 
 
 # TokenData: What's inside the token (decoded)
@@ -110,21 +140,11 @@ class TokenData(BaseModel):
     """
     Data extracted from a decoded JWT token.
     Used internally to identify the user from their token.
+    
+    Note: If token is invalid or missing required fields, verify_token() 
+    returns None rather than a TokenData with None fields.
     """
-    email: Optional[str] = None  # User's email from token payload
-
-# Password strength validation
-@field_validator("password")
-def validate_password(cls, v) -> str:
-    if len(v) < 8:
-        raise ValueError("Password must be at least 8 characters")
-    elif not any(char.isdigit() for char in v):
-        raise ValueError("Password must contain at least one number")
-    elif not any(char.isupper() for char in v):
-        raise ValueError("Password must contain at least one uppercase letter")
-    elif not any(char.islower() for char in v):
-        raise ValueError("Password must contain at least one lowercase letter")
-    return v
+    email: str  # User's email from token payload (always present in valid tokens)
 
 
 # 📖 UNDERSTANDING SCHEMAS:

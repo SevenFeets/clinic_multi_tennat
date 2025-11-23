@@ -1,55 +1,102 @@
-"""
-Tenant Schemas - Pydantic models for tenant validation
-
-🎯 YOUR MISSION (Week 3):
-Create schemas for tenant operations
-
-💡 HINTS:
-- Similar pattern to user schemas
-- TenantCreate for creating new tenants
-- Tenant for responses
-"""
-
-# TODO: Import Pydantic
-# HINT: from pydantic import BaseModel, Field
-# HINT: from datetime import datetime
-# HINT: from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+from datetime import datetime
+from typing import Optional
+import re
 
 
-# TODO: Create TenantBase schema
-# HINT: class TenantBase(BaseModel):
-# HINT:     name: str = Field(..., min_length=1)
-# HINT:     subdomain: str = Field(..., min_length=3, max_length=63)
+class TenantBase(BaseModel):
+    """
+    Base schema with shared fields for tenant operations.
+    
+    Fields:
+    - name: Full clinic name (e.g., "City Health Clinic")
+    - subdomain: URL-friendly identifier (e.g., "cityclinic")
+    """
+    name: str = Field(..., min_length=1, max_length=100, description="Clinic name")
+    subdomain: str = Field(..., min_length=3, max_length=63, description="Unique subdomain identifier")
 
 
-# TODO: Create TenantCreate schema
-# HINT: class TenantCreate(TenantBase):
-# HINT:     pass  # Inherits all fields from TenantBase
+class TenantCreate(TenantBase):
+    """
+    Schema for creating new tenants.
+    Inherits name and subdomain from TenantBase.
+    
+    Example:
+    {
+        "name": "Downtown Wellness Center",
+        "subdomain": "downtown"
+    }
+    """
+    
+    @field_validator('subdomain')
+    @classmethod
+    def validate_subdomain(cls, v: str) -> str:
+        """
+        Validate subdomain format:
+        - Must be lowercase
+        - Only alphanumeric characters and hyphens
+        - Cannot start or end with hyphen
+        - No consecutive hyphens
+        """
+        # Convert to lowercase
+        v = v.lower()
+        
+        # Check format (alphanumeric and hyphens only)
+        if not re.match(r'^[a-z0-9-]+$', v):
+            raise ValueError('Subdomain must contain only lowercase letters, numbers, and hyphens')
+        
+        # Cannot start or end with hyphen
+        if v.startswith('-') or v.endswith('-'):
+            raise ValueError('Subdomain cannot start or end with a hyphen')
+        
+        # No consecutive hyphens
+        if '--' in v:
+            raise ValueError('Subdomain cannot contain consecutive hyphens')
+        
+        # Reserved words
+        reserved = ['admin', 'api', 'www', 'app', 'mail', 'ftp', 'localhost', 'test']
+        if v in reserved:
+            raise ValueError(f'Subdomain "{v}" is reserved and cannot be used')
+        
+        return v
 
 
-# TODO: Create Tenant schema (response)
-# HINT: class Tenant(TenantBase):
-# HINT:     id: int
-# HINT:     is_active: bool
-# HINT:     created_at: datetime
-# HINT:     
-# HINT:     class Config:
-# HINT:         from_attributes = True
+class Tenant(TenantBase):
+    """
+    Schema for returning tenant data (response model).
+    Includes all database fields except sensitive information.
+    
+    Example Response:
+    {
+        "id": 1,
+        "name": "City Health Clinic",
+        "subdomain": "cityclinic",
+        "is_active": true,
+        "created_at": "2025-11-22T13:05:28.932580"
+    }
+    """
+    id: int
+    is_active: bool
+    created_at: datetime
+    
+    # Pydantic V2 config - allows reading from SQLAlchemy models
+    model_config = ConfigDict(from_attributes=True)
 
 
-# 📖 UNDERSTANDING:
+# 📖 UNDERSTANDING TENANT SCHEMAS:
 # 
+# Why separate Create and Response schemas?
+# - TenantCreate: What clients send (just name and subdomain)
+# - Tenant: What API returns (includes id, is_active, created_at)
+# - Keeps API clean and secure!
+#
 # Subdomain validation:
 # - Must be 3-63 characters (DNS standard)
-# - Should only contain letters, numbers, hyphens
+# - Lowercase letters, numbers, hyphens only
 # - Examples: "clinic1", "dr-smith", "downtown-clinic"
+# - Reserved words blocked: "admin", "api", "www", etc.
 #
-# Later you'll add:
-# - @validator to check subdomain format
-# - Check if subdomain already exists
-# - Prevent reserved words ("admin", "api", "www")
-
-# 🎯 CHALLENGE:
-# Add a validator to ensure subdomain is lowercase
-# and only contains alphanumeric characters and hyphens
+# Real-world usage:
+# - cityclinic.yourapp.com → tenant with subdomain "cityclinic"
+# - downtown.yourapp.com → tenant with subdomain "downtown"
 
