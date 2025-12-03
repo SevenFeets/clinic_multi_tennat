@@ -45,3 +45,4 @@ pytest.ini
 # documentation
 /documentation
 
+/scripts

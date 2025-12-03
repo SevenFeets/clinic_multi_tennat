@@ -14,35 +14,33 @@ Create a Patient model with proper fields
 - Store patient medical information securely
 """
 
-# TODO: Import SQLAlchemy components
-# HINT: from sqlalchemy import Column, Integer, String, Date, ForeignKey, Text
-# HINT: from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Text
+from sqlalchemy.orm import relationship
+from app.database import Base
 
-# TODO: Import Base
-# HINT: from app.database import Base
+from datetime import datetime, timezone
 
+class Patient(Base):
 
-# TODO: Create Patient class
-# HINT: class Patient(Base):
+    __tablename__ = "patients"
 
-    # TODO: Set table name
-    # HINT: __tablename__ = "patients"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    address = Column(Text, nullable=True)
+    medical_history = Column(Text, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
+    created_at = Column(datetime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(datetime, default=lambda: datetime.now(timezone.utc),
+    onupdate=lambda: datetime.now(timezone.utc))
+
+    # Define relationships
+    tenant = relationship("Tenant", back_populates="patients")
+    appointments = relationship("Appointment", back_populates="patient")
     
-    # TODO: Define columns
-    # HINT: id = Column(Integer, primary_key=True, index=True)
-    # HINT: tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
-    # HINT: first_name = Column(String, nullable=False)
-    # HINT: last_name = Column(String, nullable=False)
-    # HINT: email = Column(String)
-    # HINT: phone = Column(String)
-    # HINT: date_of_birth = Column(Date)
-    # HINT: address = Column(Text)
-    # HINT: medical_history = Column(Text)  # Store medical notes
-    
-    # TODO: Define relationships
-    # HINT: tenant = relationship("Tenant", back_populates="patients")
-    # HINT: appointments = relationship("Appointment", back_populates="patient")
-
 
 # 📖 UNDERSTANDING THE DESIGN:
 # 
@@ -58,13 +56,6 @@ Create a Patient model with proper fields
 # Date vs DateTime:
 # - Date: Just the date (birthdate)
 # - DateTime: Date and time (appointment time)
-
-# 🎯 CHALLENGE:
-# Add fields for:
-# - insurance_provider (String)
-# - insurance_number (String)
-# - emergency_contact_name (String)
-# - emergency_contact_phone (String)
 
 # ⚠️ IMPORTANT: Privacy & Security
 # - Never log patient information

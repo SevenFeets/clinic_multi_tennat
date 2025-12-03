@@ -117,6 +117,12 @@ async def get_me(current_user: user.User = Depends(require_tenant)) -> user.User
     return current_user
 
 # @router.post("/verify-email", response_model=user_schema.User)
+  # 1. Decode/validate the token (similar to JWT)
+    # 2. Extract email from token
+    # 3. Find user
+    # 4. Update user.is_active = ??
+    # 5. db.commit()
+    # 6. Return success message
 # async def verify_email(email: str, db: Session = Depends(get_db)) -> user.User:
 #     # find user by email
 #     db_existing_user = db.query(user.User).filter(user.User.email == email).first()
@@ -128,6 +134,11 @@ async def get_me(current_user: user.User = Depends(require_tenant)) -> user.User
 #     return db_existing_user
 
 # @router.post("/resend-verification-email", response_model=user_schema.User)
+  # 1. Find user
+    # 2. Check if already active
+    # 3. Generate new verification token
+    # 4. Send email (you'll need to set this up)
+    # 5. Return {"message": "Email sent"}
 # async def resend_verification_email(email: str, db: Session = Depends(get_db)) -> user.User:
 #     # find user by email
 #     db_existing_user = db.query(user.User).filter(user.User.email == email).first()
