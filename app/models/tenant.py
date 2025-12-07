@@ -27,7 +27,7 @@ class Tenant(Base):
     
     # Define relationships
     users = relationship("User", back_populates="tenant")
-    
+
     # for Week 4: Add these when you create Patient and Appointment models
     patients = relationship("Patient", back_populates="tenant")
     appointments = relationship("Appointment", back_populates="tenant")
@@ -42,6 +42,5 @@ class Tenant(Base):
     - vaccination history
     """
 
-# 🧪 TESTING (Week 3):
-# You'll create tenants and test data isolation
-
+    def __repr__(self):
+        return f"<Tenant {self.name} (ID: {self.id})>"
