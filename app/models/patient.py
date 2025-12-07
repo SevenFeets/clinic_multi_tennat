@@ -1,31 +1,16 @@
-"""
-Patient Model - Database table for patients
-
-🎯 YOUR MISSION (Week 4):
-Create a Patient model with proper fields
-
-📚 LEARNING RESOURCES:
-- Data Privacy: HIPAA compliance basics (important for healthcare!)
-- Database Relationships: One-to-many (one patient, many appointments)
-
-💡 KEY CONCEPTS:
-- Patients belong to a tenant (multi-tenancy)
-- Patients can have many appointments
-- Store patient medical information securely
-"""
-
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
 
 from datetime import datetime, timezone
+from sqlalchemy import DateTime
 
 class Patient(Base):
 
     __tablename__ = "patients"
 
     id = Column(Integer, primary_key=True, index=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, nullable=True)
@@ -33,17 +18,20 @@ class Patient(Base):
     address = Column(Text, nullable=True)
     medical_history = Column(Text, nullable=True)
     date_of_birth = Column(Date, nullable=True)
-    created_at = Column(datetime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(datetime, default=lambda: datetime.now(timezone.utc),
-    onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
 
     # Define relationships
     tenant = relationship("Tenant", back_populates="patients")
     appointments = relationship("Appointment", back_populates="patient")
     
+    def __repr__(self):
+        return f"<Patient {self.first_name} {self.last_name} (ID: {self.id})>"
 
-# 📖 UNDERSTANDING THE DESIGN:
-# 
+
+
+
 # Why tenant_id in every model?
 # - Ensures data isolation
 # - Each tenant only sees their patients
