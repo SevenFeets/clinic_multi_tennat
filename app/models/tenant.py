@@ -27,9 +27,12 @@ class Tenant(Base):
     
     # Define relationships
     users = relationship("User", back_populates="tenant")
-    # TODO Week 4: Add these when you create Patient and Appointment models
-    # patients = relationship("Patient", back_populates="tenant")
-    # appointments = relationship("Appointment", back_populates="tenant")
+    
+    # for Week 4: Add these when you create Patient and Appointment models
+    patients = relationship("Patient", back_populates="tenant")
+    appointments = relationship("Appointment", back_populates="tenant")
+    
+    
     """
     add ons:
     - max_users

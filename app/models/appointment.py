@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
 
-from datetime import datetime, timezone
 
 class AppointmentStatus(str, enum.Enum):
     scheduled = "scheduled"
@@ -16,22 +15,23 @@ class Appointment(Base):
     __tablename__ = "appointments"
     id = Column(Integer, primary_key=True, index=True)
 
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    appointment_time = Column(DateTime, nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
+    appointment_time = Column(DateTime, nullable=False, index=True)
     duration_minutes = Column(Integer, default=30)
     status = Column(Enum(AppointmentStatus), default=AppointmentStatus.scheduled)
     notes = Column(Text)
     diagnosis = Column(Text)
+    medicine_given = Column(Text)
     
     # Define relationships
     tenant = relationship("Tenant", back_populates="appointments")
     patient = relationship("Patient", back_populates="appointments")
-   
+    
+    def __repr__(self):
+        return f"<Appointment {self.id} - Patient {self.patient_id} @ {self.appointment_time} ({self.status})>"
 
 
-# 📖 UNDERSTANDING THE DESIGN:
-# 
 # Why use Enum for status?
 # - Prevents typos ("schduled" vs "scheduled")
 # - Database enforces valid values

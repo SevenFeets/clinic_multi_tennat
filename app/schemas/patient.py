@@ -1,63 +1,51 @@
-"""
-Patient Schemas - Pydantic models for patient validation
+from datetime import date
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+from typing import Optional
+import re
 
-🎯 YOUR MISSION (Week 4):
-Create schemas for patient management
+class PatientBase(BaseModel):
+    first_name: str
+    last_name: str
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    date_of_birth: date = Field(..., description="Date of birth")
+    address: Optional[str] = None
 
-💡 HINTS:
-- Follow the same pattern
-- Validate phone numbers and emails
-- Handle optional fields properly
-"""
+    @field_validator('phone')
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        # Remove spaces and dashes
+        phone = v.replace(' ', '').replace('-', '')
+        # Check if it's a valid format
+        if not re.match(r'^\d{10}$', phone):
+            raise ValueError("Invalid phone number")
+        return phone
 
-# TODO: Import Pydantic
-# HINT: from pydantic import BaseModel, EmailStr
-# HINT: from datetime import date
-# HINT: from typing import Optional
+class PatientCreate(PatientBase):
+    medical_history: Optional[str] = None
 
+class PatientUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    address: Optional[str] = None
+    medical_history: Optional[str] = None
 
-# TODO: Create PatientBase schema
-# HINT: class PatientBase(BaseModel):
-# HINT:     first_name: str
-# HINT:     last_name: str
-# HINT:     email: Optional[EmailStr] = None
-# HINT:     phone: Optional[str] = None
-# HINT:     date_of_birth: Optional[date] = None
-# HINT:     address: Optional[str] = None
+class Patient(PatientBase):
+    id: int
+    tenant_id: int
+    # Pydantic V2 config - allows reading from SQLAlchemy models
+    model_config = ConfigDict(from_attributes=True)
 
-
-# TODO: Create PatientCreate schema
-# HINT: class PatientCreate(PatientBase):
-# HINT:     medical_history: Optional[str] = None
-
-
-# TODO: Create PatientUpdate schema
-# HINT: class PatientUpdate(BaseModel):
-# HINT:     # All fields optional for partial updates
-# HINT:     first_name: Optional[str] = None
-# HINT:     last_name: Optional[str] = None
-# HINT:     email: Optional[EmailStr] = None
-# HINT:     # ... add other fields as Optional
-
-
-# TODO: Create Patient schema (response)
-# HINT: class Patient(PatientBase):
-# HINT:     id: int
-# HINT:     tenant_id: int
-# HINT:     
-# HINT:     class Config:
-# HINT:         from_attributes = True
-
-
-# 📖 UNDERSTANDING:
-# 
+    
+    
 # Why PatientUpdate has all Optional fields?
 # - Allows partial updates (update just email, or just phone)
 # - Client sends only fields they want to change
 # - Common pattern for PATCH endpoints
 
-# 🎯 CHALLENGE:
-# Add phone number validation using a @validator
-# - Remove spaces and dashes
-# - Check if it's a valid format
 
