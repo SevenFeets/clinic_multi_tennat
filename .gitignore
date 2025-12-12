@@ -46,3 +46,35 @@ pytest.ini
 /documentation
 
 /scripts
+
+# ==========================================
+# Frontend (React/Node.js)
+# ==========================================
+
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Testing
+frontend/coverage/
+
+# Production build
+frontend/build/
+frontend/dist/
+
+# Environment variables (frontend)
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Debug logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Misc
+frontend/.DS_Store
+frontend/.env
+frontend/.cache
