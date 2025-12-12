@@ -42,8 +42,8 @@ alembic.ini
 pytest.ini
 .cursor/
 
-# documentation
-/documentation
+# Keep Documentation folder (capital D)
+# Only ignore lowercase /documentation if it exists
 
 /scripts
 
