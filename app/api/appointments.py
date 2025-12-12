@@ -1,195 +1,324 @@
-"""
-Appointment Endpoints - Book and manage appointments
 
-🎯 YOUR MISSION (Week 4):
-Create endpoints for appointment management with business logic
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from typing import List, Optional
+from datetime import datetime, date, timedelta
+from app.database import get_db
+from app.models.appointment import Appointment, AppointmentStatus
+from app.models.patient import Patient
+from app.models.user import User
+from app.schemas.appointment import Appointment as AppointmentSchema, AppointmentCreate, AppointmentUpdate
+from app.auth.dependencies import get_current_active_user
 
-📚 LEARNING RESOURCES:
-- DateTime in Python: https://realpython.com/python-datetime/
-- Query Filtering: https://docs.sqlalchemy.org/en/20/orm/queryguide.html
-
-💡 KEY CONCEPTS:
-- Validate appointment times (no double booking!)
-- Check business hours
-- Verify patient belongs to same tenant
-- Filter by date range
-"""
-
-# TODO: Import FastAPI components
-# HINT: from fastapi import APIRouter, Depends, HTTPException, status, Query
-# HINT: from sqlalchemy.orm import Session
-# HINT: from typing import List, Optional
-# HINT: from datetime import datetime, date
-
-# TODO: Import your modules
-# HINT: from app.database import get_db
-# HINT: from app.models.appointment import Appointment, AppointmentStatus
-# HINT: from app.models.patient import Patient
-# HINT: from app.models.user import User
-# HINT: from app.schemas.appointment import (
-# HINT:     Appointment as AppointmentSchema,
-# HINT:     AppointmentCreate,
-# HINT:     AppointmentUpdate
-# HINT: )
-# HINT: from app.auth.dependencies import get_current_active_user
+#create router
+router = APIRouter(prefix="/appointments", tags=["Appointments"])
 
 
-# TODO: Create router
-# HINT: router = APIRouter(prefix="/appointments", tags=["Appointments"])
+# Helper function to check for time conflicts
+def check_time_conflict(
+    appointment_time: datetime,
+    tenant_id: int,
+    duration_minutes: int,
+    db: Session,
+    exclude_appointment_id: Optional[int] = None,
+) -> bool:
+    """
+    Check if a new appointment conflicts with existing appointments.
+    
+    Args:
+        appointment_time: Start time of the new appointment
+        tenant_id: Tenant ID to filter appointments
+        duration_minutes: Duration of the new appointment
+        db: Database session
+        exclude_appointment_id: Optional ID to exclude (for updates)
+    
+    Returns:
+        True if conflict exists, False otherwise
+    """
+    new_start_time = appointment_time
+    new_end_time = appointment_time + timedelta(minutes=duration_minutes)
+    
+    # Get all active appointments for the same tenant
+    query = db.query(Appointment).filter(
+        Appointment.tenant_id == tenant_id,
+        Appointment.status != AppointmentStatus.cancelled,
+    )
+
+    if exclude_appointment_id:
+        query = query.filter(Appointment.id != exclude_appointment_id)
+
+    appointments = query.all()
+
+    # Check each appointment for time overlap
+    for appointment in appointments:
+        existing_start_time = appointment.appointment_time
+        existing_end_time = appointment.appointment_time + timedelta(minutes=appointment.duration_minutes)
+
+        # Two appointments overlap if:
+        # new_start < existing_end AND new_end > existing_start
+        if new_start_time < existing_end_time and new_end_time > existing_start_time:
+            return True  # Conflict found
+
+    return False  # No conflicts
 
 
-# TODO: Create appointment endpoint
-# HINT: @router.post("/", response_model=AppointmentSchema, status_code=status.HTTP_201_CREATED)
-# HINT: async def create_appointment(
-# HINT:     appointment_data: AppointmentCreate,
-# HINT:     db: Session = Depends(get_db),
-# HINT:     current_user: User = Depends(get_current_active_user)
-# HINT: ):
-# HINT:     # Verify patient belongs to same tenant
-# HINT:     patient = db.query(Patient).filter(
-# HINT:         Patient.id == appointment_data.patient_id,
-# HINT:         Patient.tenant_id == current_user.tenant_id
-# HINT:     ).first()
-# HINT:     
-# HINT:     if not patient:
-# HINT:         raise HTTPException(status_code=404, detail="Patient not found")
-# HINT:     
-# HINT:     # TODO: Add business logic
-# HINT:     # - Check for time conflicts
-# HINT:     # - Validate business hours
-# HINT:     # - Check if time is in the future
-# HINT:     
-# HINT:     # Create appointment
-# HINT:     new_appointment = Appointment(
-# HINT:         **appointment_data.dict(),
-# HINT:         tenant_id=current_user.tenant_id
-# HINT:     )
-# HINT:     
-# HINT:     db.add(new_appointment)
-# HINT:     db.commit()
-# HINT:     db.refresh(new_appointment)
-# HINT:     
-# HINT:     return new_appointment
+# Helper function to validate business hours
+def is_within_business_hours(appointment_time: datetime, duration_minutes: int) -> bool:
+    """
+    Check if appointment falls within business hours (9 AM - 5 PM).
+    
+    Args:
+        appointment_time: Start time of the appointment
+        duration_minutes: Duration of the appointment
+    
+    Returns:
+        True if within business hours, False otherwise
+    """
+    BUSINESS_START_HOUR = 9  # 9 AM
+    BUSINESS_END_HOUR = 17   # 5 PM
+    
+    start_hour = appointment_time.hour
+    end_time = appointment_time + timedelta(minutes=duration_minutes)
+    end_hour = end_time.hour
+    end_minute = end_time.minute
+    
+    # Check if start is within business hours
+    if start_hour < BUSINESS_START_HOUR or start_hour >= BUSINESS_END_HOUR:
+        return False
+    
+    # Check if end is within business hours
+    # Allow exact 5 PM end time
+    if end_hour > BUSINESS_END_HOUR or (end_hour == BUSINESS_END_HOUR and end_minute > 0):
+        return False
+    
+    return True
 
 
-# TODO: Get appointments endpoint (with filters)
-# HINT: @router.get("/", response_model=List[AppointmentSchema])
-# HINT: async def get_appointments(
-# HINT:     skip: int = 0,
-# HINT:     limit: int = 100,
-# HINT:     patient_id: Optional[int] = None,
-# HINT:     status: Optional[AppointmentStatus] = None,
-# HINT:     date_from: Optional[date] = None,
-# HINT:     date_to: Optional[date] = None,
-# HINT:     db: Session = Depends(get_db),
-# HINT:     current_user: User = Depends(get_current_active_user)
-# HINT: ):
-# HINT:     # Base query with tenant filter
-# HINT:     query = db.query(Appointment).filter(
-# HINT:         Appointment.tenant_id == current_user.tenant_id
-# HINT:     )
-# HINT:     
-# HINT:     # Apply optional filters
-# HINT:     if patient_id:
-# HINT:         query = query.filter(Appointment.patient_id == patient_id)
-# HINT:     if status:
-# HINT:         query = query.filter(Appointment.status == status)
-# HINT:     if date_from:
-# HINT:         query = query.filter(Appointment.appointment_time >= date_from)
-# HINT:     if date_to:
-# HINT:         query = query.filter(Appointment.appointment_time <= date_to)
-# HINT:     
-# HINT:     # Execute query with pagination
-# HINT:     appointments = query.offset(skip).limit(limit).all()
-# HINT:     
-# HINT:     return appointments
+# Helper function to validate appointment is in the future
+def is_future_appointment(appointment_time: datetime) -> bool:
+    """
+    Check if appointment is scheduled for the future.
+    
+    Args:
+        appointment_time: Start time of the appointment
+    
+    Returns:
+        True if appointment is in the future, False otherwise
+    """
+    return appointment_time > datetime.now()
 
 
-# TODO: Get single appointment endpoint
-# HINT: @router.get("/{appointment_id}", response_model=AppointmentSchema)
-# HINT: async def get_appointment(
-# HINT:     appointment_id: int,
-# HINT:     db: Session = Depends(get_db),
-# HINT:     current_user: User = Depends(get_current_active_user)
-# HINT: ):
-# HINT:     appointment = db.query(Appointment).filter(
-# HINT:         Appointment.id == appointment_id,
-# HINT:         Appointment.tenant_id == current_user.tenant_id
-# HINT:     ).first()
-# HINT:     
-# HINT:     if not appointment:
-# HINT:         raise HTTPException(status_code=404, detail="Appointment not found")
-# HINT:     
-# HINT:     return appointment
+# create appointment endpoint
+@router.post("/", response_model=AppointmentSchema, status_code=status.HTTP_201_CREATED)
+async def create_appointment(
+    appointment_data: AppointmentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+    ):
+
+     # Verify patient belongs to same tenant
+    patient = db.query(Patient).filter(
+        Patient.id == appointment_data.patient_id,
+        Patient.tenant_id == current_user.tenant_id
+    ).first()
+
+    # If patient not found, raise 404 error
+    if not patient:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
+
+    # Validate appointment is in the future
+    if not is_future_appointment(appointment_data.appointment_time):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Appointment must be scheduled for a future date and time"
+        )
+
+    # Validate business hours
+    if not is_within_business_hours(appointment_data.appointment_time, appointment_data.duration_minutes):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Appointment must be within business hours (9 AM - 5 PM)"
+        )
+
+    # Check for time conflicts
+    if check_time_conflict(
+        appointment_data.appointment_time,
+        current_user.tenant_id,
+        appointment_data.duration_minutes,
+        db,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Time slot is already booked. Please choose another time."
+        )
+
+    # Create appointment
+    new_appointment = Appointment(
+        **appointment_data.model_dump(),
+        tenant_id=current_user.tenant_id,
+        patient_id=patient.id,
+        status=AppointmentStatus.scheduled
+    )
+
+    db.add(new_appointment)
+    db.commit()
+    db.refresh(new_appointment)
+    return new_appointment
 
 
-# TODO: Update appointment endpoint
-# HINT: @router.patch("/{appointment_id}", response_model=AppointmentSchema)
-# HINT: async def update_appointment(
-# HINT:     appointment_id: int,
-# HINT:     appointment_data: AppointmentUpdate,
-# HINT:     db: Session = Depends(get_db),
-# HINT:     current_user: User = Depends(get_current_active_user)
-# HINT: ):
-# HINT:     # Similar to patient update
-# HINT:     # Get appointment, update fields, commit
-# HINT:     pass  # TODO: Implement this!
+
+# Get appointments endpoint (with filters)
+@router.get("/", response_model=List[AppointmentSchema])
+async def get_appointments(
+    skip: int = 0,
+    limit: int = 100,
+    patient_id: Optional[int] = None,
+    status: Optional[AppointmentStatus] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+    ):
+
+    # Base query with tenant filter
+    query = db.query(Appointment).filter(
+        Appointment.tenant_id == current_user.tenant_id
+    )
+
+    # Apply optional filters
+    if patient_id:
+        query = query.filter(Appointment.patient_id == patient_id)
+    if status:
+        query = query.filter(Appointment.status == status)
+    if date_from:
+        query = query.filter(Appointment.appointment_time >= date_from)
+    if date_to:
+        query = query.filter(Appointment.appointment_time <= date_to)
+    # Execute query with pagination
+    appointments = query.offset(skip).limit(limit).all()
+    return appointments
 
 
-# TODO: Cancel appointment endpoint
-# HINT: @router.post("/{appointment_id}/cancel", response_model=AppointmentSchema)
-# HINT: async def cancel_appointment(
-# HINT:     appointment_id: int,
-# HINT:     db: Session = Depends(get_db),
-# HINT:     current_user: User = Depends(get_current_active_user)
-# HINT: ):
-# HINT:     appointment = db.query(Appointment).filter(
-# HINT:         Appointment.id == appointment_id,
-# HINT:         Appointment.tenant_id == current_user.tenant_id
-# HINT:     ).first()
-# HINT:     
-# HINT:     if not appointment:
-# HINT:         raise HTTPException(status_code=404, detail="Appointment not found")
-# HINT:     
-# HINT:     appointment.status = AppointmentStatus.cancelled
-# HINT:     db.commit()
-# HINT:     db.refresh(appointment)
-# HINT:     
-# HINT:     return appointment
+# Get single appointment endpoint
+@router.get("/{appointment_id}", response_model=AppointmentSchema)
+async def get_appointment(
+    appointment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+    ):
+    appointment = db.query(Appointment).filter(
+        Appointment.id == appointment_id,
+        Appointment.tenant_id == current_user.tenant_id
+    ).first()
+    if not appointment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+    return appointment
 
 
-# 📖 UNDERSTANDING APPOINTMENT LOGIC:
-# 
-# Business Rules to Implement:
-# 1. No double booking (check for overlaps)
-# 2. Business hours only (e.g., 9 AM - 5 PM)
-# 3. Future dates only (can't book in the past)
-# 4. Minimum notice period (e.g., 24 hours ahead)
-# 5. Maximum booking range (e.g., 90 days ahead)
-#
-# Checking for Conflicts:
-# New appointment: 10:00 AM - 10:30 AM
-# Existing: 9:45 AM - 10:15 AM
-# These overlap! Need to reject.
-#
-# Query for overlaps:
-# - New start < Existing end AND
-# - New end > Existing start
 
-# 🎯 CHALLENGE:
-# Implement:
-# - check_time_conflict() function
-# - Get available time slots for a date
+# Update appointment endpoint
+@router.patch("/{appointment_id}", response_model=AppointmentSchema)
+async def update_appointment(
+    appointment_id: int,
+    appointment_data: AppointmentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+    ):
+    appointment = db.query(Appointment).filter(
+        Appointment.id == appointment_id,
+        Appointment.tenant_id == current_user.tenant_id
+    ).first()
+    if not appointment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+
+    # Update only provided fields
+    update_data = appointment_data.model_dump(exclude_unset=True)
+
+    # If time or duration is changed, validate the new schedule
+    if 'appointment_time' in update_data or 'duration_minutes' in update_data:   
+        new_time = update_data.get('appointment_time', appointment.appointment_time)
+        new_duration = update_data.get('duration_minutes', appointment.duration_minutes)
+
+        # Validate appointment is in the future
+        if not is_future_appointment(new_time):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Appointment must be scheduled for a future date and time"
+            )
+
+        # Validate business hours
+        if not is_within_business_hours(new_time, new_duration):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Appointment must be within business hours (9 AM - 5 PM)"
+            )
+
+        # Check for time conflicts (excluding current appointment)
+        if check_time_conflict(
+            new_time,
+            current_user.tenant_id,
+            new_duration,
+            db,
+            exclude_appointment_id=appointment.id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Time slot is already booked. Please choose another time."
+            )
+
+    # update appointment
+    for field, value in update_data.items():
+        setattr(appointment, field, value)
+
+    db.commit()
+    db.refresh(appointment)
+    return appointment
+
+
+# Cancel appointment endpoint
+@router.post("/{appointment_id}/cancel", response_model=AppointmentSchema)
+async def cancel_appointment(
+    appointment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+    ):
+
+    appointment = db.query(Appointment).filter(
+        Appointment.id == appointment_id,
+        Appointment.tenant_id == current_user.tenant_id
+    ).first()
+    if not appointment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+
+    appointment.status = AppointmentStatus.cancelled
+    db.commit()
+    db.refresh(appointment)
+    return appointment
+
+
+
+
+# TODO: more basic features:
+
 # - Send appointment reminders
 # - Calculate appointment statistics
 
-# ⚠️ IMPORTANT:
+# TODO: ADVANCED FEATURES:
+# - Recurring appointments
+# - Waitlist management
+# - No-show tracking
+# - Automated reminders (email/SMS)
+# - Calendar sync (Google Calendar, etc.)
+
+
+# IMPORTANT:
 # - Use timezone-aware datetimes
 # - Handle daylight saving time
 # - Consider different time zones (future)
 # - Add proper indexes on appointment_time
 
-# 🧪 TESTING:
+#  TESTING:
 # 1. Book an appointment
 # 2. Try booking at same time → should fail
 # 3. Book at different time → should succeed
@@ -197,10 +326,4 @@ Create endpoints for appointment management with business logic
 # 5. Cancel appointment
 # 6. Update appointment time
 
-# 💡 ADVANCED FEATURES:
-# - Recurring appointments
-# - Waitlist management
-# - No-show tracking
-# - Automated reminders (email/SMS)
-# - Calendar sync (Google Calendar, etc.)
 
