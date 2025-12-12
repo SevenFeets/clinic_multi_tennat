@@ -38,6 +38,7 @@ class PatientUpdate(BaseModel):
 class Patient(PatientBase):
     id: int
     tenant_id: int
+    medical_history: Optional[str] = None
     # Pydantic V2 config - allows reading from SQLAlchemy models
     model_config = ConfigDict(from_attributes=True)
 

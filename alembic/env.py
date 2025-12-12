@@ -10,6 +10,8 @@ from app.config import settings
 from app.database import Base
 from app.models.user import User, LastLogin  # Import all models here
 from app.models.tenant import Tenant  # Week 3: Multi-tenancy
+from app.models.patient import Patient  # Week 4: Patient management
+from app.models.appointment import Appointment  # Week 4: Appointment system
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
