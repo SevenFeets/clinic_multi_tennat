@@ -78,14 +78,24 @@ npm run dev
 
 ## 🔗 **STEP 5: Connect to Backend**
 
-Create `frontend/.env`:
+Copy the environment template:
+
+```powershell
+# In frontend/ folder
+copy .env.example .env
+```
+
+Your `frontend/.env` should contain:
 
 ```
 VITE_API_URL=http://localhost:8000
 VITE_TENANT_ID=cityclinic
 ```
 
-**Note:** Vite uses `VITE_` prefix (not `REACT_APP_`)
+**Note:** 
+- Vite uses `VITE_` prefix (not `REACT_APP_`)
+- `.env` is gitignored (safe for your config)
+- `.env.example` is the template (committed to git)
 
 ---
 

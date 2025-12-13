@@ -78,3 +78,6 @@ frontend/yarn-error.log*
 frontend/.DS_Store
 frontend/.env
 frontend/.cache
+
+# Exception: Allow .env.example template (commit this!)
+!frontend/.env.example

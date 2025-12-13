@@ -119,13 +119,26 @@ D:\clinic multi tennant SaaS\
 
 ## 🔧 **Step 5: Configure API Connection**
 
-Create `.env` file in `frontend/` folder:
+Create `.env` file from the template:
+
+```bash
+# In frontend/ folder
+# Windows:
+copy .env.example .env
+
+# Mac/Linux:
+cp .env.example .env
+```
+
+The `.env` file should contain:
 
 ```bash
 # frontend/.env
-REACT_APP_API_URL=http://localhost:8000
-REACT_APP_TENANT_ID=cityclinic
+VITE_API_URL=http://localhost:8000
+VITE_TENANT_ID=cityclinic
 ```
+
+**Note:** `.env.example` is in git (template), but `.env` is gitignored (your actual config)
 
 ---
 
