@@ -39,9 +39,11 @@ Write-Host "🎉 All prerequisites installed!" -ForegroundColor Green
 Write-Host ""
 Write-Host "📦 Next steps:" -ForegroundColor Cyan
 Write-Host "   1. cd 'D:\clinic multi tennant SaaS'" -ForegroundColor White
-Write-Host "   2. npx create-react-app frontend" -ForegroundColor White
-Write-Host "   3. Wait 2-3 minutes for installation..." -ForegroundColor White
-Write-Host "   4. cd frontend" -ForegroundColor White
-Write-Host "   5. npm start" -ForegroundColor White
+Write-Host "   2. npm create vite@latest frontend -- --template react" -ForegroundColor White
+Write-Host "   3. cd frontend" -ForegroundColor White
+Write-Host "   4. npm install" -ForegroundColor White
+Write-Host "   5. npm run dev" -ForegroundColor White
+Write-Host ""
+Write-Host "⚡ Using Vite (10x faster than Create React App!)" -ForegroundColor Yellow
 Write-Host ""
 

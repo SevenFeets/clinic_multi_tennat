@@ -26,17 +26,26 @@ npm --version
 
 ---
 
-## 🚀 **STEP 2: Create React App** (After Node.js installed)
+## 🚀 **STEP 2: Create React App with Vite** (After Node.js installed)
 
 ```powershell
 # Navigate to project root
 cd "D:\clinic multi tennant SaaS"
 
-# Create React app
-npx create-react-app frontend
+# Create React app with Vite (FAST!)
+npm create vite@latest frontend -- --template react
 
-# Wait 2-3 minutes for installation...
+# Wait 30 seconds for installation...
+# Then install dependencies:
+cd frontend
+npm install
 ```
+
+**Why Vite?**
+- ⚡ 10x faster than Create React App
+- 🔥 Instant hot reload
+- 📦 Smaller production builds
+- 🎯 Modern and recommended by React team
 
 ---
 
@@ -56,13 +65,14 @@ frontend/.env.local
 ## ✅ **STEP 4: Test Frontend**
 
 ```powershell
-# Start frontend
-cd frontend
-npm start
+# Start frontend (from frontend folder)
+npm run dev
 
-# Should open http://localhost:3000 in browser
-# You'll see React welcome page!
+# Should open http://localhost:5173 in browser
+# You'll see Vite + React welcome page!
 ```
+
+**Note:** Vite uses port **5173** (not 3000)
 
 ---
 
@@ -71,9 +81,11 @@ npm start
 Create `frontend/.env`:
 
 ```
-REACT_APP_API_URL=http://localhost:8000
-REACT_APP_TENANT_ID=cityclinic
+VITE_API_URL=http://localhost:8000
+VITE_TENANT_ID=cityclinic
 ```
+
+**Note:** Vite uses `VITE_` prefix (not `REACT_APP_`)
 
 ---
 
@@ -81,7 +93,7 @@ REACT_APP_TENANT_ID=cityclinic
 
 ```powershell
 git add .
-git commit -m "feat: Initialize React frontend"
+git commit -m "feat: Initialize React frontend with Vite"
 git push origin frontend
 ```
 
@@ -109,8 +121,16 @@ See `Documentation/FRONTEND_SETUP.md` for:
 
 ## 🆘 **Need Help?**
 
-After installing Node.js and running `npx create-react-app frontend`, let me know if you encounter any issues!
+After installing Node.js and running `npm create vite@latest frontend -- --template react`, let me know if you encounter any issues!
 
 **Current branch:** `frontend` ✅  
 **Status:** Safe to proceed, nothing will break your backend! 🛡️
+
+---
+
+## 📚 **Vite Resources:**
+- Official Guide: https://vite.dev/guide/
+- Why Vite?: 10x faster than Create React App
+- React + Vite: Perfect combination for modern development
+
 
