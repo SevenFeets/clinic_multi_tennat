@@ -3,7 +3,7 @@
  * Handles all HTTP requests to the backend
  */
 
-import { API_URL } from '../utils/constants';
+import { API_URL, DEFAULT_TENANT } from '../utils/constants';
 import { getToken, getTenant } from '../utils/storage';
 
 /**
@@ -14,14 +14,14 @@ import { getToken, getTenant } from '../utils/storage';
  */
 export const apiClient = async (endpoint, options = {}) => {
   const token = getToken();
-  const tenant = getTenant();
+  const tenant = getTenant() || DEFAULT_TENANT; // Use default tenant if none stored
   
   const config = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
-      ...(tenant && { 'X-Tenant-ID': tenant }),
+      'X-Tenant-ID': tenant, // Always include tenant header
       ...options.headers,
     },
   };

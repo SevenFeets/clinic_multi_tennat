@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getDashboardStats } from '../services/statsService';
 import '../styles/DashboardPage.css';
 
 /**
@@ -8,7 +10,7 @@ import '../styles/DashboardPage.css';
  * This is the main page users see after logging in.
  * It shows:
  * - Welcome message with user's name
- * - Quick stats (patients, appointments)
+ * - Quick stats (patients, appointments) - FETCHED FROM DATABASE
  * - Navigation to different sections
  * - Logout button
  */
@@ -17,6 +19,32 @@ function DashboardPage() {
   // Get user info and logout function from context
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  // State for dashboard stats
+  const [stats, setStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  /**
+   * Fetch dashboard stats on component mount
+   */
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await getDashboardStats();
+        setStats(data);
+      } catch (err) {
+        console.error('Error loading dashboard stats:', err);
+        setError(err.message || 'Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []); // Empty dependency array = run once on mount
 
   /**
    * Handle logout
@@ -32,7 +60,7 @@ function DashboardPage() {
       {/* Top Navigation Bar */}
       <nav className="dashboard-nav">
         <div className="nav-brand">
-          <h2>🏥 Clinic Management</h2>
+          <h2>🐾 Veterinary Clinic</h2>
         </div>
         <div className="nav-actions">
           <span className="user-name">👤 {user?.first_name || user?.email}</span>
@@ -52,41 +80,66 @@ function DashboardPage() {
 
         {/* Stats Cards */}
         <section className="stats-section">
-          <div className="stat-card">
-            <div className="stat-icon">👥</div>
-            <div className="stat-content">
-              <h3>Total Patients</h3>
-              <p className="stat-number">124</p>
-              <p className="stat-change">+12 this month</p>
+          {/* Show loading state */}
+          {isLoading && (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
+              <p>Loading dashboard data... ⏳</p>
             </div>
-          </div>
+          )}
 
-          <div className="stat-card">
-            <div className="stat-icon">📅</div>
-            <div className="stat-content">
-              <h3>Today's Appointments</h3>
-              <p className="stat-number">8</p>
-              <p className="stat-change">3 completed</p>
+          {/* Show error state */}
+          {error && !isLoading && (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
+              <p style={{ color: '#e53e3e' }}>❌ {error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                style={{ marginTop: '10px', padding: '8px 16px', cursor: 'pointer' }}
+              >
+                Retry
+              </button>
             </div>
-          </div>
+          )}
 
-          <div className="stat-card">
-            <div className="stat-icon">⏰</div>
-            <div className="stat-content">
-              <h3>Pending Appointments</h3>
-              <p className="stat-number">15</p>
-              <p className="stat-change">This week</p>
-            </div>
-          </div>
+          {/* Show stats when loaded */}
+          {!isLoading && !error && stats && (
+            <>
+              <div className="stat-card">
+                <div className="stat-icon">🐾</div>
+                <div className="stat-content">
+                  <h3>Total Patients</h3>
+                  <p className="stat-number">{stats.total_patients}</p>
+                  <p className="stat-change">+{stats.patients_this_month} this month</p>
+                </div>
+              </div>
 
-          <div className="stat-card">
-            <div className="stat-icon">💰</div>
-            <div className="stat-content">
-              <h3>Revenue</h3>
-              <p className="stat-number">$12,450</p>
-              <p className="stat-change">This month</p>
-            </div>
-          </div>
+              <div className="stat-card">
+                <div className="stat-icon">📅</div>
+                <div className="stat-content">
+                  <h3>Today's Appointments</h3>
+                  <p className="stat-number">{stats.today_appointments}</p>
+                  <p className="stat-change">{stats.today_completed} completed</p>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon">⏰</div>
+                <div className="stat-content">
+                  <h3>Pending Appointments</h3>
+                  <p className="stat-number">{stats.pending_appointments}</p>
+                  <p className="stat-change">Scheduled</p>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon">💰</div>
+                <div className="stat-content">
+                  <h3>Revenue</h3>
+                  <p className="stat-number">${stats.revenue_this_month.toLocaleString()}</p>
+                  <p className="stat-change">This month</p>
+                </div>
+              </div>
+            </>
+          )}
         </section>
 
         {/* Quick Actions */}
@@ -94,7 +147,7 @@ function DashboardPage() {
           <h2>Quick Actions</h2>
           <div className="action-cards">
             <button className="action-card">
-              <span className="action-icon">➕</span>
+              <span className="action-icon">🐶</span>
               <span className="action-title">New Patient</span>
               <span className="action-description">Register a new patient</span>
             </button>
@@ -106,7 +159,7 @@ function DashboardPage() {
             </button>
 
             <button className="action-card">
-              <span className="action-icon">👥</span>
+              <span className="action-icon">🐾</span>
               <span className="action-title">View Patients</span>
               <span className="action-description">See all patient records</span>
             </button>

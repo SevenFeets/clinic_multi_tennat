@@ -47,7 +47,7 @@ function LoginPage() {
 
   /**
    * Handle form submission
-   * Sends login request to Django backend
+   * Sends login request to FastAPI backend
    */
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent page reload
@@ -59,31 +59,34 @@ function LoginPage() {
       const apiUrl = import.meta.env.VITE_API_URL;
       const tenantId = import.meta.env.VITE_DEFAULT_TENANT;
 
-      // Make API request to Django backend
-      const response = await fetch(`${apiUrl}/api/auth/login/`, {
+      // FastAPI OAuth2PasswordRequestForm expects form-data (not JSON!)
+      // It requires "username" field (we'll send email as username)
+      const formDataToSend = new FormData();
+      formDataToSend.append('username', formData.email); // OAuth2 uses "username" field
+      formDataToSend.append('password', formData.password);
+
+      // Make API request to FastAPI backend
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-Tenant-ID': tenantId, // Multi-tenant header
+          // Don't set Content-Type - browser will set it automatically with boundary for FormData
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+        body: formDataToSend, // Send as form-data, not JSON
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         // Login failed
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.detail || 'Login failed');
       }
 
       // Login successful! 🎉
-      // Save user info to context (which also saves to localStorage)
+      // FastAPI returns: { access_token, token_type, user }
       login({
         user: data.user,
-        token: data.token,
+        token: data.access_token, // FastAPI uses "access_token"
       });
 
       // Redirect to dashboard
@@ -102,7 +105,7 @@ function LoginPage() {
       <div className="login-card">
         {/* Header */}
         <div className="login-header">
-          <h1>🏥 Clinic Management</h1>
+          <h1>🐾 Veterinary Clinic</h1>
           <p>Sign in to your account</p>
         </div>
 

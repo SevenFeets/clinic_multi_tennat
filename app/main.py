@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.tenant import TenantMiddleware
 
 # Import routers
-from app.api import auth, patients, appointments
+from app.api import auth, patients, appointments, stats
 
 # Create FastAPI app instance
 app = FastAPI(title="Clinic Management API", version="1.0.0")
@@ -19,6 +19,7 @@ app = FastAPI(title="Clinic Management API", version="1.0.0")
 app.include_router(auth.router)
 app.include_router(patients.router)
 app.include_router(appointments.router)
+app.include_router(stats.router)
 
 # Add middlewares (ORDER MATTERS!)
 # ⚠️ CRITICAL: Middleware executes in REVERSE order (last added = first executed)
