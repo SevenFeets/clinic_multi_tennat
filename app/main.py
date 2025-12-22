@@ -34,9 +34,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",  # Vite default port
+        "http://localhost:5174",  # Vite alternative port
         "http://localhost:3000",  # React (Create React App) default port
         "http://localhost:3001",  # Alternative frontend port
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
     ], 

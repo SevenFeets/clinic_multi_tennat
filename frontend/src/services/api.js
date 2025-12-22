@@ -34,16 +34,39 @@ export const apiClient = async (endpoint, options = {}) => {
       return null;
     }
 
-    const data = await response.json();
+    // Try to parse JSON response
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      throw new Error('Invalid response from server. Please try again.');
+    }
 
+    // Check if request failed
     if (!response.ok) {
-      throw new Error(data.detail || data.message || 'Something went wrong');
+      // Extract error message from various possible formats
+      const errorMessage = 
+        data.detail || 
+        data.message || 
+        data.error ||
+        (typeof data === 'string' ? data : null) ||
+        `Request failed with status ${response.status}`;
+      
+      throw new Error(errorMessage);
     }
 
     return data;
   } catch (error) {
     console.error('API Error:', error);
-    throw error;
+    
+    // If error is already an Error object with a message, throw it
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
+    
+    // Otherwise, create a new Error with a proper message
+    throw new Error('Network error. Please check your connection and try again.');
   }
 };
 

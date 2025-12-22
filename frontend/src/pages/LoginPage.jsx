@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/LoginPage.css';
 
@@ -160,7 +160,12 @@ function LoginPage() {
 
         {/* Footer */}
         <div className="login-footer">
-          <p>Don't have an account? Contact your administrator</p>
+          <p>
+            Don't have an account?{' '}
+            <Link to="/register" className="register-link">
+              Sign up here
+            </Link>
+          </p>
         </div>
       </div>
     </div>

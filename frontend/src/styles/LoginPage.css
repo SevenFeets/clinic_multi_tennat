@@ -142,8 +142,20 @@
 .login-footer {
   margin-top: 24px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: #718096;
+}
+
+.register-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.register-link:hover {
+  color: #764ba2;
+  text-decoration: underline;
 }
 
 /* Responsive design for mobile */

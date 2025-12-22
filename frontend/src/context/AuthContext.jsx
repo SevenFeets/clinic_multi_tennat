@@ -63,6 +63,17 @@ export function AuthProvider({ children }) {
   };
 
   /**
+   * Register function - called when user signs up
+   * @param {Object} userData - Object containing new user info
+   */
+  const register = (userData) => {
+    // After registration, we don't automatically log in
+    // User will need to login separately for security
+    // Just return success
+    return userData;
+  };
+
+  /**
    * Logout function - called when user clicks logout
    */
   const logout = () => {
@@ -80,6 +91,7 @@ export function AuthProvider({ children }) {
     user,
     token,
     login,
+    register,
     logout,
     isLoading,
     isAuthenticated: !!user, // true if user exists, false otherwise

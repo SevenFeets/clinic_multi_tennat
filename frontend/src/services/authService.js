@@ -25,13 +25,15 @@ export const login = async (email, password) => {
 /**
  * Register new user
  * @param {object} userData - User registration data
- * @returns {Promise<{user, token}>}
+ * @returns {Promise<object>} User object
  */
 export const register = async (userData) => {
-  // TODO: Implement registration API call
-  // Hint: POST to ENDPOINTS.AUTH.REGISTER
-  
-  throw new Error('Register not implemented yet - implement this!');
+  try {
+    const response = await post('/auth/register', userData);
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
