@@ -58,15 +58,47 @@ export const clearAll = () => {
 };
 
 // Auth-specific helpers
-export const saveToken = (token) => setItem(STORAGE_KEYS.TOKEN, token);
-export const getToken = () => getItem(STORAGE_KEYS.TOKEN);
+// Note: Token is stored as plain string, not JSON
+export const saveToken = (token) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+  } catch (error) {
+    console.error('Error saving token:', error);
+  }
+};
+
+export const getToken = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.TOKEN);
+  } catch (error) {
+    console.error('Error getting token:', error);
+    return null;
+  }
+};
+
 export const removeToken = () => removeItem(STORAGE_KEYS.TOKEN);
 
 export const saveUser = (user) => setItem(STORAGE_KEYS.USER, user);
 export const getUser = () => getItem(STORAGE_KEYS.USER);
 export const removeUser = () => removeItem(STORAGE_KEYS.USER);
 
-export const saveTenant = (tenant) => setItem(STORAGE_KEYS.TENANT, tenant);
-export const getTenant = () => getItem(STORAGE_KEYS.TENANT);
+// Note: Tenant is stored as plain string, not JSON
+export const saveTenant = (tenant) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.TENANT, tenant);
+  } catch (error) {
+    console.error('Error saving tenant:', error);
+  }
+};
+
+export const getTenant = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.TENANT);
+  } catch (error) {
+    console.error('Error getting tenant:', error);
+    return null;
+  }
+};
+
 export const removeTenant = () => removeItem(STORAGE_KEYS.TENANT);
 

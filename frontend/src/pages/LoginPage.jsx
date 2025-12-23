@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/LoginPage.css';
 
@@ -20,6 +20,7 @@ function LoginPage() {
   
   // useNavigate lets us redirect user to other pages
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Form state - tracks what user types
   const [formData, setFormData] = useState({
@@ -30,6 +31,15 @@ function LoginPage() {
   // UI state - tracks loading and errors
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  // Check if user was redirected due to session expiration
+  useEffect(() => {
+    if (searchParams.get('session_expired') === 'true') {
+      setSessionExpired(true);
+      setError('Your session has expired. Please log in again.');
+    }
+  }, [searchParams]);
 
   /**
    * Handle input changes
@@ -109,8 +119,15 @@ function LoginPage() {
           <p>Sign in to your account</p>
         </div>
 
+        {/* Show session expired message */}
+        {sessionExpired && (
+          <div className="error-message" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}>
+            ⏰ {error}
+          </div>
+        )}
+
         {/* Show error message if login fails */}
-        {error && (
+        {error && !sessionExpired && (
           <div className="error-message">
             ⚠️ {error}
           </div>

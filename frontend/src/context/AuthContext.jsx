@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useEffect } from 'react';
+import { STORAGE_KEYS } from '../utils/constants';
 
 /**
  * AuthContext - Manages user authentication state across the entire app
@@ -33,8 +34,8 @@ export function AuthProvider({ children }) {
   const checkAuth = () => {
     try {
       // Look for saved token in browser storage
-      const savedToken = localStorage.getItem('token');
-      const savedUser = localStorage.getItem('user');
+      const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
 
       if (savedToken && savedUser) {
         // User was logged in before, restore their session
@@ -58,8 +59,8 @@ export function AuthProvider({ children }) {
     setToken(userData.token);
 
     // Save to localStorage so user stays logged in after page refresh
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('user', JSON.stringify(userData.user));
+    localStorage.setItem(STORAGE_KEYS.TOKEN, userData.token);
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData.user));
   };
 
   /**
@@ -82,8 +83,8 @@ export function AuthProvider({ children }) {
     setToken(null);
 
     // Clear localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER);
   };
 
   // The value that will be accessible to all components

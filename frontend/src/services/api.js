@@ -4,7 +4,7 @@
  */
 
 import { API_URL, DEFAULT_TENANT } from '../utils/constants';
-import { getToken, getTenant } from '../utils/storage';
+import { getToken, getTenant, removeToken, removeUser } from '../utils/storage';
 
 /**
  * Base fetch wrapper with authentication and error handling
@@ -45,6 +45,18 @@ export const apiClient = async (endpoint, options = {}) => {
 
     // Check if request failed
     if (!response.ok) {
+      // Handle 401 Unauthorized - token expired or invalid
+      if (response.status === 401) {
+        // Clear authentication data
+        removeToken();
+        removeUser();
+        
+        // Redirect to login page
+        window.location.href = '/login?session_expired=true';
+        
+        throw new Error('Session expired. Please log in again.');
+      }
+      
       // Extract error message from various possible formats
       const errorMessage = 
         data.detail || 
