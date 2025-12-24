@@ -11,10 +11,13 @@ import { ENDPOINTS } from '../utils/constants';
  * @returns {Promise<Array>}
  */
 export const getPatients = async () => {
-  // TODO: Implement get all patients
-  // Hint: GET to ENDPOINTS.PATIENTS.LIST
-  
-  throw new Error('getPatients not implemented - your turn!');
+  try {
+    const data = await get('/patients');
+    return data;
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    throw error;
+  }
 };
 
 /**

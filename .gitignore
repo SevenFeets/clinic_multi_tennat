@@ -81,3 +81,6 @@ frontend/.cache
 
 # Exception: Allow .env.example template (commit this!)
 !frontend/.env.example
+
+# Dcumentation folder
+/Documentation

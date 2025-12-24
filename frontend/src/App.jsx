@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import ViewPatientsPage from './pages/ViewPatientsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import './App.css';
 
@@ -43,6 +44,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* View Patients - protected route */}
+          <Route 
+            path="/patients" 
+            element={
+              <ProtectedRoute>
+                <ViewPatientsPage />
               </ProtectedRoute>
             } 
           />

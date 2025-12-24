@@ -158,7 +158,7 @@ function DashboardPage() {
               <span className="action-description">Book a new appointment</span>
             </button>
 
-            <button className="action-card">
+            <button className="action-card" onClick={() => navigate('/patients')}>
               <span className="action-icon">🐾</span>
               <span className="action-title">View Patients</span>
               <span className="action-description">See all patient records</span>
