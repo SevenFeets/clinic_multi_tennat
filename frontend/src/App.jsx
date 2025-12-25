@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ViewPatientsPage from './pages/ViewPatientsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import TotalPatientsPage from './pages/TotalPatientsPage';
 import './App.css';
 
 /**
@@ -56,6 +57,16 @@ function App() {
                 <ViewPatientsPage />
               </ProtectedRoute>
             } 
+          />
+
+          {/* Total Patients - protected route */}
+          <Route
+            path="/total-patients"
+            element={
+              <ProtectedRoute>
+                <TotalPatientsPage />
+              </ProtectedRoute>
+            }
           />
 
           {/* 404 - Catch all other routes */}

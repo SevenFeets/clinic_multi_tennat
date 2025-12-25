@@ -103,7 +103,7 @@ function DashboardPage() {
           {/* Show stats when loaded */}
           {!isLoading && !error && stats && (
             <>
-              <div className="stat-card">
+              <div className="stat-card" onClick={() => navigate('/total-patients')}>
                 <div className="stat-icon">🐾</div>
                 <div className="stat-content">
                   <h3>Total Patients</h3>
