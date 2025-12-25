@@ -62,3 +62,18 @@ export const deleteAppointment = async (id) => {
   throw new Error('deleteAppointment not implemented - your turn!');
 };
 
+
+/**
+ * Get today's appointments
+ * @returns {Promise<Array>}
+ */
+export const getTodayAppointments = async () => {
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Call API with date filter (API supports date_from and date_to query params)
+  // This is more efficient than fetching all appointments
+  const appointments = await get(ENDPOINTS.APPOINTMENTS.LIST + `?date_from=${today}&date_to=${today}`);
+  
+  return appointments;
+};

@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import ViewPatientsPage from './pages/ViewPatientsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import TotalPatientsPage from './pages/TotalPatientsPage';
+import TodayAppointmentPage from './pages/TodayAppointmentPage';
 import './App.css';
 
 /**
@@ -65,6 +66,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <TotalPatientsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Today's Appointments - protected route */}
+          <Route
+            path="/today-appointments"
+            element={
+              <ProtectedRoute>
+                <TodayAppointmentPage />
               </ProtectedRoute>
             }
           />

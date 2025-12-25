@@ -112,7 +112,7 @@ function DashboardPage() {
                 </div>
               </div>
 
-              <div className="stat-card">
+              <div className="stat-card" onClick={() => navigate('/today-appointments')}>
                 <div className="stat-icon">📅</div>
                 <div className="stat-content">
                   <h3>Today's Appointments</h3>
