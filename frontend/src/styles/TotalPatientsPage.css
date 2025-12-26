@@ -1,0 +1,259 @@
+/* TotalPatientsPage Styles */
+
+
+.total-patients-container
+{
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Navigation Bar */
+.total-patients-nav {
+    background: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-left h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #2d3748;
+}
+
+.back-button {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    background: #f7fafc;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #4a5568;
+    transition: all 0.2s;
+}
+
+.back-button:hover {
+    background: #edf2f7;
+    transform: translateX(-5px);
+}
+
+.user-info {
+    color: #718096;
+    font-size: 16px;
+}
+
+/* Main Content */
+.total-patients-main {
+    max-width: 1400px;
+    margin: 32px auto;
+    padding: 0 32px;
+
+    /*  background...   */
+}
+
+/* Header Section */
+.header-section {
+    text-align: center;
+    margin-bottom: 32px;
+    color: white;
+}
+
+.header-section h2 {
+    font-size: 2rem;
+    margin: 0 0 0.5rem 0;
+    color: white;
+}
+
+.header-section p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* States */
+.loading-state,
+.error-state {
+    background: white;
+    padding: 4rem 2rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.loading-state p {
+    font-size: 1.2rem;
+    color: #4a5568;
+    margin: 0;
+}
+
+.error-state p {
+    font-size: 1.1rem;
+    color: #e53e3e;
+    margin-bottom: 1rem;
+}
+
+.retry-button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.retry-button:hover {   
+    background: #5a67d8;
+}
+
+/* Stats Section */
+.stats-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* Total Card */
+.total-card {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    transition: transform 0.2s;
+}
+
+.total-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+    font-size: 4rem;
+    color: #667eea;
+    opacity: 0.8;   
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.card-content h3 {
+    font-size: 1.2rem;
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.total-number {
+    font-size: 4rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 1px 0 0 0;
+    line-height: 1;
+}
+
+.card-description {
+    font-size: 1rem;
+    color: #718096;
+    margin: 1rem 0 0 0;
+    line-height: 1.5;
+}
+
+/* Info Card */
+.info-card {
+
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.info-card h4 {
+    font-size: 1.3rem;
+    color: #2d3748;
+    margin: 0 0 1.5rem 0;   
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;  
+}
+
+.action-btn:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
+.action-btn {
+    background: #549feb;
+    color: #2d3748;
+    border: 1px solid #cbd5e0;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.action-btn.primary {
+    background: #48bb78;
+    color: white;
+    border-color: #48bb78;
+}
+
+.action-btn:hover {
+    background: #5abf67bb;
+    border-color: #357abf;
+}
+
+.action-btn.primary:hover {
+    background: #a4933b;
+    border-color: #38a169;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stats-section {
+    grid-template-columns: 1fr;
+  }
+
+  .total-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .total-patients-nav {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .nav-left {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+}
