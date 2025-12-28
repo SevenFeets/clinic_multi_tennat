@@ -3,19 +3,20 @@
  * Handles all appointment-related API calls
  */
 
-import { get, post, put, del } from './api';
+import { get, post, put, del, patch } from './api';
 import { ENDPOINTS } from '../utils/constants';
 
-/**
- * Get all appointments
- * @returns {Promise<Array>}
- */
 export const getAppointments = async () => {
-  // TODO: Implement get all appointments
-  // Hint: GET to ENDPOINTS.APPOINTMENTS.LIST
   
-  throw new Error('getAppointments not implemented - your turn!');
+  try {
+    const appointments = await get(ENDPOINTS.APPOINTMENTS.LIST);
+    return appointments;
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    throw error;
+  }
 };
+
 
 /**
  * Get single appointment by ID
@@ -23,9 +24,13 @@ export const getAppointments = async () => {
  * @returns {Promise<object>}
  */
 export const getAppointment = async (id) => {
-  // TODO: Implement get appointment by ID
-  
-  throw new Error('getAppointment not implemented - your turn!');
+  try {
+    const appointment = await get(ENDPOINTS.APPOINTMENTS.DETAIL(id));
+    return appointment;
+  } catch (error) {
+    console.error('Error fetching appointment:', error);
+    throw error;
+  }
 };
 
 /**
@@ -34,9 +39,13 @@ export const getAppointment = async (id) => {
  * @returns {Promise<object>}
  */
 export const createAppointment = async (appointmentData) => {
-  // TODO: Implement create appointment
-  
-  throw new Error('createAppointment not implemented - your turn!');
+  try {
+    const appointment = await post(ENDPOINTS.APPOINTMENTS.CREATE, appointmentData);
+    return appointment;
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    throw error;
+  }
 };
 
 /**
@@ -46,9 +55,14 @@ export const createAppointment = async (appointmentData) => {
  * @returns {Promise<object>}
  */
 export const updateAppointment = async (id, appointmentData) => {
-  // TODO: Implement update appointment
-  
-  throw new Error('updateAppointment not implemented - your turn!');
+  try {
+    // Backend uses PATCH method for updates (not PUT)
+    const appointment = await patch(ENDPOINTS.APPOINTMENTS.UPDATE(id), appointmentData);
+    return appointment;
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    throw error;
+  }
 };
 
 /**
@@ -57,9 +71,12 @@ export const updateAppointment = async (id, appointmentData) => {
  * @returns {Promise<void>}
  */
 export const deleteAppointment = async (id) => {
-  // TODO: Implement delete appointment
-  
-  throw new Error('deleteAppointment not implemented - your turn!');
+  try {
+    await del(ENDPOINTS.APPOINTMENTS.DELETE(id));
+  } catch (error) {
+    console.error('Error deleting appointment:', error);
+    throw error;
+  }
 };
 
 

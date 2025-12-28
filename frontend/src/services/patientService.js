@@ -26,10 +26,16 @@ export const getPatients = async () => {
  * @returns {Promise<object>}
  */
 export const getPatient = async (id) => {
-  // TODO: Implement get patient by ID
-  // Hint: GET to ENDPOINTS.PATIENTS.DETAIL(id)
+
+  try {
+    const patient = await get(ENDPOINTS.PATIENTS.DETAIL(id));
+    return patient;
+  }
+  catch (error) {
+    console.error('Error fetching patient:', error);
+    throw error;
+  }
   
-  throw new Error('getPatient not implemented - your turn!');
 };
 
 /**
@@ -38,10 +44,14 @@ export const getPatient = async (id) => {
  * @returns {Promise<object>}
  */
 export const createPatient = async (patientData) => {
-  // TODO: Implement create patient
-  // Hint: POST to ENDPOINTS.PATIENTS.CREATE with patientData
-  
-  throw new Error('createPatient not implemented - your turn!');
+  try {
+    const patient = await post(ENDPOINTS.PATIENTS.CREATE, patientData);
+    return patient;
+  }
+  catch (error) {
+    console.error('Error creating patient:', error);
+    throw error;
+  }
 };
 
 /**
