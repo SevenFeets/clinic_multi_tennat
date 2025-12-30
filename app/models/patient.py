@@ -81,6 +81,8 @@ class Patient(Base):
     appointments = relationship("Appointment", back_populates="patient", cascade="all, delete-orphan")
     vaccines = relationship("Vaccine", back_populates="patient", cascade="all, delete-orphan")
     treatments = relationship("Treatment", back_populates="patient", cascade="all, delete-orphan")
+    waitlist_entries = relationship("Waitlist", back_populates="patient", cascade="all, delete-orphan")
+    recurring_appointments = relationship("RecurringAppointment", back_populates="patient", cascade="all, delete-orphan")
     
     # ==========================================
     # COMPUTED PROPERTIES

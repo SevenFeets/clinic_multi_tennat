@@ -146,7 +146,7 @@ function DashboardPage() {
         <section className="actions-section">
           <h2>Quick Actions</h2>
           <div className="action-cards">
-            <button className="action-card">
+            <button className="action-card" onClick={() => navigate('/patients/new')}>
               <span className="action-icon">🐶</span>
               <span className="action-title">New Patient</span>
               <span className="action-description">Register a new patient</span>

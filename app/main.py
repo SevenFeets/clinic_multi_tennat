@@ -10,7 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.tenant import TenantMiddleware
 
 # Import routers
-from app.api import auth, patients, appointments, stats
+from app.api import auth, patients, appointments, stats, waitlist, recurring_appointments, calendar
+
+# Import scheduler
+from app.services.scheduler_service import start_scheduler, stop_scheduler
 
 # Create FastAPI app instance
 app = FastAPI(title="Clinic Management API", version="1.0.0")
@@ -20,6 +23,9 @@ app.include_router(auth.router)
 app.include_router(patients.router)
 app.include_router(appointments.router)
 app.include_router(stats.router)
+app.include_router(waitlist.router)
+app.include_router(recurring_appointments.router)
+app.include_router(calendar.router)
 
 # Add middlewares (ORDER MATTERS!)
 # ⚠️ CRITICAL: Middleware executes in REVERSE order (last added = first executed)
@@ -77,6 +83,26 @@ async def services():
 @app.get("/products")
 async def products():
     return {"message": "This is the products page"}
+
+
+# Startup and shutdown events
+@app.on_event("startup")
+async def startup_event():
+    """Start background services when app starts"""
+    # Start scheduler for automated reminders
+    try:
+        start_scheduler()
+    except Exception as e:
+        print(f"Warning: Could not start scheduler: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop background services when app shuts down"""
+    try:
+        stop_scheduler()
+    except Exception as e:
+        print(f"Warning: Error stopping scheduler: {e}")
 
 # 🧪 TESTING YOUR WORK:
 # 1. Run: uvicorn app.main:app --reload

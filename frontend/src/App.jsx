@@ -7,6 +7,7 @@ import ViewPatientsPage from './pages/ViewPatientsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import TotalPatientsPage from './pages/TotalPatientsPage';
 import TodayAppointmentPage from './pages/TodayAppointmentPage';
+import NewPatientPage from './pages/NewPatientpage';
 import './App.css';
 
 /**
@@ -56,6 +57,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ViewPatientsPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* New Patient - protected route */}
+          <Route 
+            path="/patients/new" 
+            element={
+              <ProtectedRoute>
+                <NewPatientPage />
               </ProtectedRoute>
             } 
           />

@@ -10,6 +10,9 @@ from app.models.patient import Patient
 from app.models.user import User
 from app.schemas.appointment import Appointment as AppointmentSchema, AppointmentCreate, AppointmentUpdate
 from app.auth.dependencies import get_current_active_user
+from app.utils.email_service import email_service
+from pydantic import BaseModel
+from fastapi import BackgroundTasks
 
 #create router
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
@@ -113,6 +116,7 @@ def is_future_appointment(appointment_time: datetime) -> bool:
 @router.post("/", response_model=AppointmentSchema, status_code=status.HTTP_201_CREATED)
 async def create_appointment(
     appointment_data: AppointmentCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
     ):
@@ -164,6 +168,14 @@ async def create_appointment(
     db.add(new_appointment)
     db.commit()
     db.refresh(new_appointment)
+    
+    # Send confirmation email in background
+    background_tasks.add_task(
+        email_service.send_appointment_confirmation,
+        new_appointment,
+        patient
+    )
+    
     return new_appointment
 
 
@@ -280,6 +292,7 @@ async def update_appointment(
 @router.post("/{appointment_id}/cancel", response_model=AppointmentSchema)
 async def cancel_appointment(
     appointment_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
     ):
@@ -294,22 +307,215 @@ async def cancel_appointment(
     appointment.status = AppointmentStatus.cancelled
     db.commit()
     db.refresh(appointment)
+    
+    # Get patient for email notification
+    patient = db.query(Patient).filter(Patient.id == appointment.patient_id).first()
+    if patient:
+        # Send cancellation email in background
+        background_tasks.add_task(
+            email_service.send_appointment_cancellation,
+            appointment,
+            patient
+        )
+    
     return appointment
 
 
+# Mark appointment as no-show endpoint
+@router.post("/{appointment_id}/no-show", response_model=AppointmentSchema)
+async def mark_no_show(
+    appointment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Mark an appointment as no-show.
+    Only works for appointments that are scheduled and in the past.
+    """
+    appointment = db.query(Appointment).filter(
+        Appointment.id == appointment_id,
+        Appointment.tenant_id == current_user.tenant_id
+    ).first()
+    
+    if not appointment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+    
+    # Only allow marking no-show for scheduled appointments
+    if appointment.status != AppointmentStatus.scheduled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot mark appointment as no-show. Current status: {appointment.status}"
+        )
+    
+    # Only allow marking no-show for past appointments
+    if appointment.appointment_time > datetime.now():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot mark future appointment as no-show"
+        )
+    
+    appointment.status = AppointmentStatus.no_show
+    db.commit()
+    db.refresh(appointment)
+    return appointment
 
 
-# TODO: more basic features:
+# Appointment Statistics Response Model
+class AppointmentStats(BaseModel):
+    total_appointments: int
+    scheduled_count: int
+    completed_count: int
+    cancelled_count: int
+    no_show_count: int
+    no_show_rate: float  # Percentage of no-shows
+    average_duration_minutes: Optional[float] = None
+    appointments_this_month: int
+    appointments_this_week: int
+    upcoming_appointments: int  # Future scheduled appointments
+    
+    class Config:
+        from_attributes = True
 
-# - Send appointment reminders
-# - Calculate appointment statistics
 
-# TODO: ADVANCED FEATURES:
-# - Recurring appointments
-# - Waitlist management
-# - No-show tracking
-# - Automated reminders (email/SMS)
+# Get appointment statistics endpoint
+@router.get("/stats", response_model=AppointmentStats)
+async def get_appointment_statistics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Calculate comprehensive appointment statistics for the current tenant.
+    Includes counts by status, no-show rate, and time-based metrics.
+    """
+    now = datetime.now()
+    today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
+    
+    # First day of current month
+    month_start = datetime(now.year, now.month, 1, 0, 0, 0)
+    
+    # First day of current week (Monday)
+    days_since_monday = now.weekday()
+    week_start = today_start - timedelta(days=days_since_monday)
+    
+    # Base query for tenant
+    base_query = db.query(Appointment).filter(
+        Appointment.tenant_id == current_user.tenant_id
+    )
+    
+    # Total appointments
+    total_appointments = base_query.count()
+    
+    # Count by status
+    scheduled_count = base_query.filter(
+        Appointment.status == AppointmentStatus.scheduled
+    ).count()
+    
+    completed_count = base_query.filter(
+        Appointment.status == AppointmentStatus.completed
+    ).count()
+    
+    cancelled_count = base_query.filter(
+        Appointment.status == AppointmentStatus.cancelled
+    ).count()
+    
+    no_show_count = base_query.filter(
+        Appointment.status == AppointmentStatus.no_show
+    ).count()
+    
+    # Calculate no-show rate (no-shows / (completed + no-shows))
+    total_attended = completed_count + no_show_count
+    no_show_rate = (no_show_count / total_attended * 100) if total_attended > 0 else 0.0
+    
+    # Average duration
+    avg_duration = db.query(func.avg(Appointment.duration_minutes)).filter(
+        Appointment.tenant_id == current_user.tenant_id
+    ).scalar()
+    average_duration_minutes = float(avg_duration) if avg_duration else None
+    
+    # Appointments this month
+    appointments_this_month = base_query.filter(
+        Appointment.appointment_time >= month_start
+    ).count()
+    
+    # Appointments this week
+    appointments_this_week = base_query.filter(
+        Appointment.appointment_time >= week_start
+    ).count()
+    
+    # Upcoming appointments (future scheduled)
+    upcoming_appointments = base_query.filter(
+        Appointment.status == AppointmentStatus.scheduled,
+        Appointment.appointment_time > now
+    ).count()
+    
+    return AppointmentStats(
+        total_appointments=total_appointments,
+        scheduled_count=scheduled_count,
+        completed_count=completed_count,
+        cancelled_count=cancelled_count,
+        no_show_count=no_show_count,
+        no_show_rate=round(no_show_rate, 2),
+        average_duration_minutes=average_duration_minutes,
+        appointments_this_month=appointments_this_month,
+        appointments_this_week=appointments_this_week,
+        upcoming_appointments=upcoming_appointments
+    )
+
+
+# Send appointment reminder endpoint
+@router.post("/{appointment_id}/send-reminder", status_code=status.HTTP_200_OK)
+async def send_appointment_reminder(
+    appointment_id: int,
+    reminder_hours: int = 24,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Manually send an appointment reminder email.
+    In production, this would be automated via a background job scheduler.
+    """
+    appointment = db.query(Appointment).filter(
+        Appointment.id == appointment_id,
+        Appointment.tenant_id == current_user.tenant_id
+    ).first()
+    
+    if not appointment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found"
+        )
+    
+    if appointment.status != AppointmentStatus.scheduled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only send reminders for scheduled appointments"
+        )
+    
+    # Get patient
+    patient = db.query(Patient).filter(Patient.id == appointment.patient_id).first()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient not found"
+        )
+    
+    # Send reminder
+    success = await email_service.send_appointment_reminder(
+        appointment,
+        patient,
+        reminder_hours
+    )
+    
+    if success:
+        return {"message": "Reminder sent successfully"}
+    else:
+        return {"message": "Reminder could not be sent (check patient email or timing)"}
+
+
+# TODO: ADVANCED FEATURES (To be implemented):
 # - Calendar sync (Google Calendar, etc.)
+# - SMS reminders (Twilio integration)
+# - Automated reminder scheduling (background job)
 
 
 # IMPORTANT:
