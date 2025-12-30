@@ -8,6 +8,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import TotalPatientsPage from './pages/TotalPatientsPage';
 import TodayAppointmentPage from './pages/TodayAppointmentPage';
 import NewPatientPage from './pages/NewPatientpage';
+import ScheduleAppointmentPage from './pages/ScheduleAppointmentPage';
 import './App.css';
 
 /**
@@ -87,6 +88,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <TodayAppointmentPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Schedule Appointment - protected route */}
+          <Route
+            path="/schedule-appointment"
+            element={
+              <ProtectedRoute>
+                <ScheduleAppointmentPage />
               </ProtectedRoute>
             }
           />
