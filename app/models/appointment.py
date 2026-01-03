@@ -24,6 +24,10 @@ class Appointment(Base):
     diagnosis = Column(Text)
     medicine_given = Column(Text)
     
+    # Calendar sync
+    google_calendar_event_id = Column(String, nullable=True)  # Store Google Calendar event ID
+    reminder_sent_at = Column(DateTime, nullable=True)  # Track when reminder was sent
+    
     # Define relationships
     tenant = relationship("Tenant", back_populates="appointments")
     patient = relationship("Patient", back_populates="appointments")

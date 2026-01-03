@@ -1,6 +1,7 @@
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -10,6 +11,16 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     app_name: str = "Clinic Management SaaS"
     debug: bool = True
+    
+    # Email Configuration (for SendGrid)
+    sendgrid_api_key: Optional[str] = None
+    email_from_address: str = "noreply@clinic.com"
+    email_enabled: bool = True
+    
+    # Google Calendar Configuration
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+    google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
     
     model_config = SettingsConfigDict(
         env_file=".env",
