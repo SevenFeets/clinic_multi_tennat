@@ -11,6 +11,8 @@ import NewPatientPage from './pages/NewPatientpage';
 import ScheduleAppointmentPage from './pages/ScheduleAppointmentPage';
 import ReportPage from './pages/ReportPage';
 import CalendarViewPage from './pages/CalendarViewPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import ProfilePage from './pages/ProfilePage';
 import './App.css';
 
 /**
@@ -120,6 +122,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <CalendarViewPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics - protected route */}
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <AnalyticsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Profile - protected route */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

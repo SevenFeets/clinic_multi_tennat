@@ -165,9 +165,15 @@ function DashboardPage() {
             </button>
 
             <button className="action-card" onClick={() => navigate('/reports')}>
+              <span className="action-icon">📋</span>
+              <span className="action-title">Patient Reports</span>
+              <span className="action-description">View patient medical reports</span>
+            </button>
+
+            <button className="action-card" onClick={() => navigate('/analytics')}>
               <span className="action-icon">📊</span>
-              <span className="action-title">Reports</span>
-              <span className="action-description">View clinic analytics</span>
+              <span className="action-title">Analytics</span>
+              <span className="action-description">View clinic statistics & analytics</span>
             </button>
           </div>
         </section>
