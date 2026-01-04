@@ -10,6 +10,7 @@ import TodayAppointmentPage from './pages/TodayAppointmentPage';
 import NewPatientPage from './pages/NewPatientpage';
 import ScheduleAppointmentPage from './pages/ScheduleAppointmentPage';
 import ReportPage from './pages/ReportPage';
+import CalendarViewPage from './pages/CalendarViewPage';
 import './App.css';
 
 /**
@@ -109,6 +110,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReportPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Calendar View - protected route */}
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <CalendarViewPage />
               </ProtectedRoute>
             }
           />
