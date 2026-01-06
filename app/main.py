@@ -15,8 +15,20 @@ from app.api import auth, patients, appointments, stats, waitlist, recurring_app
 # Import scheduler
 from app.services.scheduler_service import start_scheduler, stop_scheduler
 
+# Prometheus monitoring
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator  # pyright: ignore[reportMissingImports]
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+
 # Create FastAPI app instance
 app = FastAPI(title="Clinic Management API", version="1.0.0")
+
+# Add Prometheus metrics endpoint
+if PROMETHEUS_AVAILABLE:
+    instrumentator = Instrumentator()
+    instrumentator.instrument(app).expose(app)
 
 # Include routers
 app.include_router(auth.router)
