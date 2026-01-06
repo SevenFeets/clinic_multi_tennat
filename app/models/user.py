@@ -18,6 +18,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     full_name = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
+    photo_url = Column(String, nullable=True)  # Optional profile photo URL
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now())
     is_active = Column(Boolean, default=False)  # ⚠️ Default is False, but registration sets True temporarily (see TODO in auth.py)
     is_superuser = Column(Boolean, default=False)

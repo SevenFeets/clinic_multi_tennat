@@ -1,0 +1,165 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import ViewPatientsPage from './pages/ViewPatientsPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import TotalPatientsPage from './pages/TotalPatientsPage';
+import TodayAppointmentPage from './pages/TodayAppointmentPage';
+import NewPatientPage from './pages/NewPatientpage';
+import ScheduleAppointmentPage from './pages/ScheduleAppointmentPage';
+import ReportPage from './pages/ReportPage';
+import CalendarViewPage from './pages/CalendarViewPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import ProfilePage from './pages/ProfilePage';
+import './App.css';
+
+/**
+ * App Component - The Root of Your Application
+ * 
+ * This is the main component that:
+ * 1. Wraps everything in AuthProvider (for authentication state)
+ * 2. Sets up routing with BrowserRouter
+ * 3. Defines all the pages/routes in your app
+ * 
+ * Current Routes:
+ * - / → Redirects to /login
+ * - /login → Login page (public)
+ * - /dashboard → Dashboard page (protected - requires login)
+ */
+
+function App() {
+  return (
+    // AuthProvider makes auth state available to all components
+    <AuthProvider>
+      {/* BrowserRouter enables client-side routing */}
+      <BrowserRouter>
+        {/* Routes defines all the pages in your app */}
+        <Routes>
+          {/* Root path - redirect to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          
+          {/* Login page - anyone can access */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Register page - anyone can access */}
+          <Route path="/register" element={<RegisterPage />} />
+          
+          {/* Dashboard - protected route (must be logged in) */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* View Patients - protected route */}
+          <Route 
+            path="/patients" 
+            element={
+              <ProtectedRoute>
+                <ViewPatientsPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* New Patient - protected route */}
+          <Route 
+            path="/patients/new" 
+            element={
+              <ProtectedRoute>
+                <NewPatientPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Total Patients - protected route */}
+          <Route
+            path="/total-patients"
+            element={
+              <ProtectedRoute>
+                <TotalPatientsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Today's Appointments - protected route */}
+          <Route
+            path="/today-appointments"
+            element={
+              <ProtectedRoute>
+                <TodayAppointmentPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Schedule Appointment - protected route */}
+          <Route
+            path="/schedule-appointment"
+            element={
+              <ProtectedRoute>
+                <ScheduleAppointmentPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Reports - protected route */}
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <ReportPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Calendar View - protected route */}
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <CalendarViewPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics - protected route */}
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <AnalyticsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Profile - protected route */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 404 - Catch all other routes */}
+          <Route 
+            path="*" 
+            element={
+              <div style={{ textAlign: 'center', marginTop: '50px' }}>
+                <h1>404 - Page Not Found</h1>
+                <p>The page you're looking for doesn't exist.</p>
+              </div>
+            } 
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;

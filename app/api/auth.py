@@ -116,6 +116,81 @@ async def get_me(current_user: user.User = Depends(require_tenant)) -> user.User
     """
     return current_user
 
+
+# Update user profile endpoint
+@router.patch("/me", response_model=user_schema.User)
+async def update_profile(
+    user_update: user_schema.UserUpdate,
+    current_user: user.User = Depends(require_tenant),
+    db: Session = Depends(get_db)
+):
+    """
+    Update current user's profile.
+    Can update: full_name, email, photo_url
+    
+    ⚠️ NOTE: Email changes don't require verification yet (SendGrid not fully set up).
+    In production, you should:
+    1. Send verification email to new address
+    2. Only update email after verification
+    3. Optionally send notification to old email
+    
+    Requires:
+    - Valid JWT token
+    - X-Tenant-ID header
+    """
+    # Check if email is being changed and if it's already taken
+    if user_update.email and user_update.email != current_user.email:
+        existing_user = db.query(user.User).filter(
+            user.User.email == user_update.email,
+            user.User.id != current_user.id
+        ).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+    
+    # Update only provided fields
+    update_data = user_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return current_user
+
+
+# Change password endpoint
+@router.patch("/me/password", response_model=user_schema.User)
+async def change_password(
+    password_data: user_schema.PasswordChange,
+    current_user: user.User = Depends(require_tenant),
+    db: Session = Depends(get_db)
+):
+    """
+    Change current user's password.
+    Requires old password for security verification.
+    
+    Requires:
+    - Valid JWT token
+    - X-Tenant-ID header
+    """
+    # Verify old password
+    if not verify_password(password_data.old_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect current password"
+        )
+    
+    # Hash and update new password
+    current_user.hashed_password = hash_password(password_data.new_password)
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return current_user
+
 # @router.post("/verify-email", response_model=user_schema.User)
   # 1. Decode/validate the token (similar to JWT)
     # 2. Extract email from token

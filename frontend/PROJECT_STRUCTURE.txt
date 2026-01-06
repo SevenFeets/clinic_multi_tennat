@@ -1,0 +1,146 @@
+CLINIC MANAGEMENT SAAS - FRONTEND STRUCTURE
+===========================================
+
+frontend/
+│
+├── 📄 Configuration Files
+│   ├── .env                        ← Environment variables (API URL, etc.)
+│   ├── .env.example                ← Template for .env
+│   ├── .gitignore                  ← Git ignore rules
+│   ├── package.json                ← Dependencies & scripts
+│   ├── vite.config.js              ← Vite configuration
+│   ├── eslint.config.js            ← ESLint rules
+│   ├── index.html                  ← HTML entry point
+│   ├── README.md                   ← Project documentation
+│   ├── STRUCTURE.md                ← Detailed structure guide
+│   └── PROJECT_STRUCTURE.txt       ← This file (visual tree)
+│
+├── 📁 public/                      ← Static assets served as-is
+│   └── vite.svg
+│
+└── 📁 src/                         ← Source code
+    │
+    ├── 📄 Entry Files
+    │   ├── main.jsx                ← App entry point
+    │   ├── App.jsx                 ← Main app component with routes
+    │   ├── App.css                 ← App-specific styles
+    │   └── index.css               ← Global CSS
+    │
+    ├── 📁 assets/                  ← Images, icons, media
+    │   └── react.svg
+    │
+    ├── 📁 components/              ← React Components
+    │   │
+    │   ├── 📁 common/              ← Reusable UI components
+    │   │   └── .gitkeep            
+    │   │   └── (Future: Button.jsx, Input.jsx, Modal.jsx, Card.jsx, etc.)
+    │   │
+    │   ├── 📁 layout/              ← Layout components
+    │   │   └── .gitkeep
+    │   │   └── (Future: Navbar.jsx, Sidebar.jsx, Footer.jsx, etc.)
+    │   │
+    │   ├── 📁 auth/                ← Authentication components
+    │   │   └── .gitkeep
+    │   │   └── (Future: LoginForm.jsx, RegisterForm.jsx, ProtectedRoute.jsx)
+    │   │
+    │   ├── 📁 patients/            ← Patient management components
+    │   │   └── .gitkeep
+    │   │   └── (Future: PatientList.jsx, PatientCard.jsx, PatientForm.jsx)
+    │   │
+    │   ├── 📁 appointments/        ← Appointment components
+    │   │   └── .gitkeep
+    │   │   └── (Future: AppointmentList.jsx, AppointmentCalendar.jsx)
+    │   │
+    │   └── 📁 dashboard/           ← Dashboard components
+    │       └── (Future: StatsCard.jsx, QuickActions.jsx, etc.)
+    │
+    ├── 📁 context/                 ← React Context (Global State)
+    │   └── .gitkeep
+    │   └── (Future: AuthContext.jsx, TenantContext.jsx)
+    │
+    ├── 📁 hooks/                   ← Custom React Hooks
+    │   └── .gitkeep
+    │   └── (Future: useAuth.js, useTenant.js, useApi.js)
+    │
+    ├── 📁 pages/                   ← Page Components (Routes)
+    │   └── .gitkeep
+    │   └── (Future: LoginPage.jsx, DashboardPage.jsx, PatientsPage.jsx)
+    │
+    ├── 📁 services/                ← API Layer (Backend Communication)
+    │   ├── api.js                  ← ✅ Base API client
+    │   ├── authService.js          ← ✅ Authentication API
+    │   ├── patientService.js       ← ✅ Patient CRUD API
+    │   ├── appointmentService.js   ← ✅ Appointment CRUD API
+    │   └── index.js                ← ✅ Export all services
+    │
+    ├── 📁 styles/                  ← Global Styles
+    │   └── .gitkeep
+    │   └── (Future: theme.css, variables.css, globals.css)
+    │
+    └── 📁 utils/                   ← Utility Functions
+        ├── constants.js            ← ✅ App constants (API_URL, routes, etc.)
+        ├── storage.js              ← ✅ localStorage helpers
+        ├── validators.js           ← ✅ Form validation functions
+        ├── formatters.js           ← ✅ Data formatting (dates, phone, etc.)
+        └── tests/                  ← Utility tests
+
+
+===========================================
+FOLDER PURPOSES
+===========================================
+
+📁 components/
+  ├── common/       → Reusable UI (Button, Input, Modal, Card)
+  ├── layout/       → App structure (Navbar, Sidebar, Footer)
+  ├── auth/         → Login/Register forms
+  ├── patients/     → Patient management UI
+  ├── appointments/ → Appointment management UI
+  └── dashboard/    → Dashboard widgets
+
+📁 context/         → Global state (Auth, Tenant)
+📁 hooks/           → Custom React hooks (useAuth, useApi)
+📁 pages/           → Route pages (LoginPage, DashboardPage)
+📁 services/        → API calls to backend (✅ Already created)
+📁 styles/          → Global CSS, themes
+📁 utils/           → Helper functions (✅ Already created)
+
+
+===========================================
+WHAT'S READY TO USE
+===========================================
+
+✅ services/        → All API service files created
+✅ utils/           → All utility functions created
+✅ .env files       → Environment configuration ready
+⏳ components/      → Folders ready, awaiting your code
+⏳ context/         → Folder ready, awaiting your code
+⏳ hooks/           → Folder ready, awaiting your code
+⏳ pages/           → Folder ready, awaiting your code
+
+
+===========================================
+NEXT STEPS
+===========================================
+
+1. Create Context Providers (AuthContext, TenantContext)
+2. Create Custom Hooks (useAuth, useTenant, useApi)
+3. Build Login Page
+4. Build Dashboard Page
+5. Build Patient Management
+6. Build Appointment Management
+
+
+===========================================
+STRUCTURE BENEFITS
+===========================================
+
+✅ Professional & Industry-Standard
+✅ Easy to Navigate
+✅ Scalable (add features without restructuring)
+✅ Team-Friendly (no conflicts)
+✅ Clear Separation of Concerns
+✅ Maintainable Long-Term
+
+
+Happy Coding! 🚀
+

@@ -31,6 +31,8 @@ class Tenant(Base):
     # for Week 4: Add these when you create Patient and Appointment models
     patients = relationship("Patient", back_populates="tenant")
     appointments = relationship("Appointment", back_populates="tenant")
+    waitlist_entries = relationship("Waitlist", back_populates="tenant")
+    recurring_appointments = relationship("RecurringAppointment", back_populates="tenant")
     
     
     """

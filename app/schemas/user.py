@@ -96,18 +96,77 @@ class User(UserBase):
         "id": 1,
         "email": "john@example.com",
         "full_name": "John Doe",
+        "photo_url": "https://example.com/photo.jpg",
         "is_active": true,
         "created_at": "2025-11-04T10:30:00",
         "tenant_id": null
     }
     """
     id: int
+    photo_url: Optional[str] = None
     is_active: bool
     created_at: datetime
     is_superuser: bool = False
     # tenant_id: Optional[int] = None  # Commented out until we create Tenant model
     
     # Pydantic V2 config - allows reading from SQLAlchemy models
+    model_config = ConfigDict(from_attributes=True)
+
+
+# UserUpdate: What clients send when updating profile
+class UserUpdate(BaseModel):
+    """
+    Schema for updating user profile.
+    All fields are optional - only send what you want to update.
+    
+    Example:
+    {
+        "full_name": "John Smith",
+        "email": "newemail@example.com",
+        "photo_url": "https://example.com/new-photo.jpg"
+    }
+    """
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    photo_url: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# PasswordChange: What clients send when changing password
+class PasswordChange(BaseModel):
+    """
+    Schema for changing user password.
+    Requires both old and new password for security.
+    
+    Example:
+    {
+        "old_password": "OldPass123",
+        "new_password": "NewSecurePass456"
+    }
+    """
+    old_password: str = Field(..., description="Current password")
+    new_password: str = Field(..., min_length=8, description="New password (min 8 characters)")
+    
+    # Password strength validation (same as UserCreate)
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """
+        Validate password strength requirements:
+        - At least 8 characters (enforced by Field min_length)
+        - At least one number
+        - At least one uppercase letter
+        - At least one lowercase letter
+        """
+        if not any(char.isdigit() for char in v):
+            raise ValueError("Password must contain at least one number")
+        if not any(char.isupper() for char in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(char.islower() for char in v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        return v
+    
     model_config = ConfigDict(from_attributes=True)
 
 
