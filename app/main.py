@@ -1,24 +1,33 @@
-
-# Import FastAPI
 from fastapi import FastAPI
 from datetime import datetime
 
-# Import CORS middleware
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import tenant middleware
 from app.middleware.tenant import TenantMiddleware
 
-# Import routers
-from app.api import auth, patients, appointments
+from app.api import auth, patients, appointments, stats, waitlist, recurring_appointments, calendar
 
-# Create FastAPI app instance
+from app.services.scheduler_service import start_scheduler, stop_scheduler
+
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator  # pyright: ignore[reportMissingImports]
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+
 app = FastAPI(title="Clinic Management API", version="1.0.0")
 
-# Include routers
+if PROMETHEUS_AVAILABLE:
+    instrumentator = Instrumentator()
+    instrumentator.instrument(app).expose(app)
+
 app.include_router(auth.router)
 app.include_router(patients.router)
 app.include_router(appointments.router)
+app.include_router(stats.router)
+app.include_router(waitlist.router)
+app.include_router(recurring_appointments.router)
+app.include_router(calendar.router)
 
 # Add middlewares (ORDER MATTERS!)
 # ⚠️ CRITICAL: Middleware executes in REVERSE order (last added = first executed)
@@ -32,8 +41,12 @@ app.add_middleware(TenantMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # React default port
-        "http://localhost:3001",  # Alternative frontend port
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
     ], 
@@ -43,7 +56,6 @@ app.add_middleware(
 )
 
 
-# Public endpoints (no tenant required)
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "message": "API is running"}
@@ -52,6 +64,7 @@ async def health_check():
 @app.get("/")
 async def main():
     return {"message": "Welcome to the Clinic Management API"}
+
 @app.get("/datetime")
 async def get_datetime():
     return {"datetime": str(datetime.now())}
@@ -73,9 +86,20 @@ async def services():
 async def products():
     return {"message": "This is the products page"}
 
-# 🧪 TESTING YOUR WORK:
-# 1. Run: uvicorn app.main:app --reload
-# 2. Visit: http://localhost:8000/docs
-# 3. Try out your endpoints in the interactive documentation!
-# 4. You should see your endpoints listed and be able to test them
 
+@app.on_event("startup")
+async def startup_event():
+    """Start background services when app starts"""
+    try:
+        start_scheduler()
+    except Exception as e:
+        print(f"Warning: Could not start scheduler: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop background services when app shuts down"""
+    try:
+        stop_scheduler()
+    except Exception as e:
+        print(f"Warning: Error stopping scheduler: {e}")

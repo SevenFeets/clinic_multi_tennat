@@ -24,6 +24,10 @@ class Appointment(Base):
     diagnosis = Column(Text)
     medicine_given = Column(Text)
     
+    # Calendar sync
+    google_calendar_event_id = Column(String, nullable=True)  # Store Google Calendar event ID
+    reminder_sent_at = Column(DateTime, nullable=True)  # Track when reminder was sent
+    
     # Define relationships
     tenant = relationship("Tenant", back_populates="appointments")
     patient = relationship("Patient", back_populates="appointments")
@@ -32,28 +36,8 @@ class Appointment(Base):
         return f"<Appointment {self.id} - Patient {self.patient_id} @ {self.appointment_time} ({self.status})>"
 
 
-# Why use Enum for status?
-# - Prevents typos ("schduled" vs "scheduled")
-# - Database enforces valid values
-# - Autocomplete in your IDE!
-#
-# Duration in minutes:
-# - Easy to calculate end time
-# - Easy to check for overlapping appointments
-# - Standard: appointment_end = appointment_time + duration
-#
-# Notes vs Diagnosis:
-# - notes: Things to remember (patient concerns, etc.)
-# - diagnosis: Doctor's findings after appointment
-
-# 💡 BUSINESS LOGIC IDEAS:
-# Later, you'll want to:
+# Later:
 # - Prevent double-booking (same time, same doctor)
 # - Send reminders before appointments
 # - Calculate no-show rates
 # - Generate revenue reports
-
-# 🧪 TESTING (Week 4):
-# You'll create appointment booking endpoints
-# Test edge cases: overlapping times, past dates, etc.
-
