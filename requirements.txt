@@ -29,3 +29,17 @@ httpx==0.28.1
 # Utilities
 python-dateutil==2.9.0
 
+# Email Service
+sendgrid==6.11.0
+
+# Google Calendar Integration
+google-auth==2.36.0
+google-auth-oauthlib==1.2.1
+google-auth-httplib2==0.2.0
+google-api-python-client==2.154.0
+
+# Background Job Scheduler
+APScheduler==3.10.4
+
+# Monitoring (Optional)
+prometheus-fastapi-instrumentator==7.0.0
